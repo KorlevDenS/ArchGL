@@ -13,7 +13,7 @@ val actionWords: List<String> = listOf(
     "read",
     "update",
     "delete",
-    "work", "with",
+    "work", "with", "obtaining",
     "generate",
     "return",
     "accept", "request", "from"
@@ -26,19 +26,22 @@ data object DataStruct : Token()
 data object ActorStruct : Token()
 data object FRStruct : Token()
 
-data object SendAction : Token()
-data object ToAction : Token()
-data object SaveAction : Token()
-data object ReadAction : Token()
-data object DeleteAction : Token()
-data object UpdateAction : Token()
-data object WorkAction : Token()
-data object WithAction : Token()
-data object GenerateAction : Token()
-data object ReturnAction: Token()
-data object AcceptAction: Token()
-data object RequestAction: Token()
-data object FromAction : Token()
+interface ActionWord
+
+data object SendAction : Token(), ActionWord
+data object ToAction : Token(), ActionWord
+data object SaveAction : Token(), ActionWord
+data object ReadAction : Token(), ActionWord
+data object DeleteAction : Token(), ActionWord
+data object UpdateAction : Token(), ActionWord
+data object WorkAction : Token(), ActionWord
+data object WithAction : Token(), ActionWord
+data object ObtainingAction : Token(), ActionWord
+data object GenerateAction : Token(), ActionWord
+data object ReturnAction: Token(), ActionWord
+data object AcceptAction: Token(), ActionWord
+data object RequestAction: Token(), ActionWord
+data object FromAction : Token(), ActionWord
 
 interface PropValue {
     val value: Any
@@ -79,6 +82,7 @@ fun getActionToken(token: String): Token {
         "delete" -> DeleteAction
         "work" -> WorkAction
         "with" -> WithAction
+        "obtaining" -> ObtainingAction
         "generate" -> GenerateAction
         "return" -> ReturnAction
         "accept" -> AcceptAction

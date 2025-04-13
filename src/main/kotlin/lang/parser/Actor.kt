@@ -20,7 +20,8 @@ data class Actor(
 
         val types: List<String> = listOf(
             "service",
-            "web-client"
+            "web-client",
+            "scheduler"
         )
 
     }

@@ -1,11 +1,24 @@
 package domain.specific
 
-import domain.specific.lang.lexer.EOF
-import domain.specific.lang.lexer.Lexer
-import domain.specific.lang.lexer.Token
+import domain.specific.lang.lexer.*
 import domain.specific.lang.parser.Actor
 import domain.specific.lang.parser.Parser
 
+abstract class Animal {
+    abstract fun sound(): String
+}
+
+class Dog : Animal() {
+    override fun sound() = "Woof"
+}
+
+class Cat : Animal() {
+    override fun sound() = "Meow"
+}
+
+class Bird : Animal() {
+    override fun sound() = "Chirp"
+}
 
 fun main() {
 
@@ -59,6 +72,24 @@ fun main() {
                 retention: 1500
                 unitVolume: 432000
             }
+            data MyWebPage {
+                type: "html"
+                retention: 1500
+                unitVolume: 432000
+            }
+            
+            fr SomeFR_name {
+                actions: (
+                    accept request from PCClient,
+                    read SMS,
+                    work with SMS obtaining Image,
+                    send Image to Server1 obtaining MyWebPage, 
+                    work with MyWebPage,
+                    save MyWebPage,
+                    return
+                )
+                frequency: 1100
+            }
         }
     """
 
@@ -77,14 +108,12 @@ fun main() {
         }
     }
 
-    tokens.forEach {
-        println(it.toString())
-    }
+//    tokens.forEach {
+//        println(it.toString())
+//    }
 
     val parser = Parser(tokens)
     println(parser.parse())
-
-
 
 
 

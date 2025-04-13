@@ -32,4 +32,18 @@ data class Application (
 
     }
 
+    override fun toString(): String {
+        return "Application(id='$id',\n" +
+                "scaleVertically='$scaleVertically',\n" +
+                "scaleHorizontally='$scaleHorizontally',\n" +
+                "usersNumber=$usersNumber,\n" +
+                "dayUsersNumber=$dayUsersNumber,\n" +
+                "latency=$latency, availability=$availability,\n" +
+                "installedProps=$installedProps,\n" +
+                "actors=$actors,\n" +
+                "data=$data,\n" +
+                "frs=$frs\n)"
+    }
+
+
 }
