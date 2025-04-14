@@ -138,15 +138,14 @@ class Parser(
 
     private fun MutableList<Action>.addActionToStream(action: Action) {
         if (this.isEmpty()) {
-            if (action is AcceptRequestFrom) {
+            if (action is Accepting) {
                 this.add(action)
                 return
             } else {
                 throw ParserException("First action in fr must be 'accept request from YourActorId'", position)
             }
         }
-        val previous = this.last()
-        when (previous) {
+        when (val previous = this.last()) {
             is Return -> {
                 throw ParserException("Actions after 'return' are not allowed!", position)
             }
@@ -172,8 +171,14 @@ class Parser(
                 }
             }
 
-            is AcceptRequestFrom -> {
-                if (action !is AcceptRequestFrom) {
+            is Accepting -> {
+                if (action !is Accepting) {
+                    if (previous is AcceptRequestFrom && action !is Generative && action !is Return) {
+                        throw ParserException("Only Generative actions or 'return' can follow 'accept request from'", position)
+                    }
+                    if (previous is AcceptFrom && action is Generative) {
+                        throw ParserException("Only Not Generative actions can follow 'accept YourData from'", position)
+                    }
                     this.add(action)
                     return
                 } else {
@@ -220,11 +225,18 @@ class Parser(
                     Data.DefaultRequest
                 )
             )
+        } else if (frActionWords.compareWithTemplate(AcceptFrom.template)) {
+            this.addActionToStream(
+                AcceptFrom(
+                    getActorFromName(frActionWords, 3),
+                    getDataFromName(frActionWords, 1)
+                )
+            )
         } else if (frActionWords.compareWithTemplate(Return.template)) {
             this.addActionToStream(
                 Return(
                     Data.DefaultRequest,
-                    Actor.AppItself
+                    (this.first() as Accepting).sender
                 )
             )
         } else if (frActionWords.compareWithTemplate(Generate.template)) {
@@ -242,45 +254,45 @@ class Parser(
         } else if (frActionWords.compareWithTemplate(WorkWithObtaining.template)) {
             this.addActionToStream(
                 WorkWithObtaining(
-                    getDataFromName(frActionWords, 2),
+                    Data.DefaultRequest,
                     getDataFromName(frActionWords, 4)
                 )
             )
         } else if (frActionWords.compareWithTemplate(WorkWith.template)) {
             this.addActionToStream(
                 WorkWith(
-                    getDataFromName(frActionWords, 2)
+                    Data.DefaultRequest
                 )
             )
         } else if (frActionWords.compareWithTemplate(SendTo.template)) {
             this.addActionToStream(
                 SendTo(
-                    getDataFromName(frActionWords, 1),
+                    Data.DefaultRequest,
                     getActorFromName(frActionWords, 3)
                 )
             )
         } else if (frActionWords.compareWithTemplate(Save.template)) {
             this.addActionToStream(
                 Save(
-                    getDataFromName(frActionWords, 1)
+                    Data.DefaultRequest
                 )
             )
         } else if (frActionWords.compareWithTemplate(Update.template)) {
             this.addActionToStream(
                 Update(
-                    getDataFromName(frActionWords, 1)
+                    Data.DefaultRequest
                 )
             )
         } else if (frActionWords.compareWithTemplate(Delete.template)) {
             this.addActionToStream(
                 Delete(
-                    getDataFromName(frActionWords, 1)
+                    Data.DefaultRequest
                 )
             )
         } else if (frActionWords.compareWithTemplate(SendToObtaining.template)) {
             this.addActionToStream(
                 SendToObtaining(
-                    getDataFromName(frActionWords, 1),
+                    Data.DefaultRequest,
                     getActorFromName(frActionWords, 3),
                     getDataFromName(frActionWords, 5)
                 )
@@ -289,6 +301,28 @@ class Parser(
             throw ParserException("Unknown action description!", position)
         }
 
+    }
+
+    private fun MutableList<Action>.checkDataStream() {
+        if (this.size < 2) {
+            return
+        }
+        var streamData: Data
+        if (this[0] is AcceptRequestFrom) {
+            streamData = this[1].data0
+        } else {
+            streamData = this[0].data0
+            this[1].data0 = streamData
+            if (this[1] is Obtaining) {
+                streamData = (this[1] as Obtaining).resData
+            }
+        }
+        for (i in 2..<this.size) {
+            this[i].data0 = streamData
+            if (this[i] is Obtaining) {
+                streamData = (this[i] as Obtaining).resData
+            }
+        }
     }
 
     private fun parseActionsProp(fr: FR) {
@@ -322,6 +356,7 @@ class Parser(
                         throw ParserException("No action before ) in fr!", position)
                     }
                     frActions.parseAndAddAction(frActionWords)
+                    frActions.checkDataStream()
                     fr.actions = frActions
                     fr.installedProps.add("actions")
                     position++

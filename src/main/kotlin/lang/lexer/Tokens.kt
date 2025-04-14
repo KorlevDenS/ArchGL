@@ -8,6 +8,7 @@ val structureTypes: List<String> = listOf(
 )
 
 val actionWords: List<String> = listOf(
+    "it",
     "send", "to",
     "save",
     "read",
@@ -28,6 +29,7 @@ data object FRStruct : Token()
 
 interface ActionWord
 
+data object ItAction: Token(), ActionWord
 data object SendAction : Token(), ActionWord
 data object ToAction : Token(), ActionWord
 data object SaveAction : Token(), ActionWord
@@ -74,6 +76,7 @@ fun getStructToken(token: String): Token {
 
 fun getActionToken(token: String): Token {
     return when (token) {
+        "it" -> ItAction
         "send" -> SendAction
         "to" -> ToAction
         "save" -> SaveAction

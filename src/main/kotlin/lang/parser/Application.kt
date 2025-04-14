@@ -33,16 +33,31 @@ data class Application (
     }
 
     override fun toString(): String {
-        return "Application(id='$id',\n" +
-                "scaleVertically='$scaleVertically',\n" +
-                "scaleHorizontally='$scaleHorizontally',\n" +
-                "usersNumber=$usersNumber,\n" +
-                "dayUsersNumber=$dayUsersNumber,\n" +
-                "latency=$latency, availability=$availability,\n" +
-                "installedProps=$installedProps,\n" +
-                "actors=$actors,\n" +
-                "data=$data,\n" +
-                "frs=$frs\n)"
+        val sb = StringBuilder()
+        sb.append("Application: $id\n")
+        sb.append("scaleVertically: $scaleVertically\n")
+        sb.append("scaleHorizontally: $scaleHorizontally\n")
+        sb.append("usersNumber: $usersNumber\n")
+        sb.append("dayUsersNumber: $dayUsersNumber\n")
+        sb.append("latency: $latency\n")
+        sb.append("availability: $availability")
+        sb.append("installedProps: $installedProps\n")
+        sb.append("actors: $actors\n")
+        sb.append("data: $data\n")
+
+        sb.append("frs: [\n")
+        for (fr in frs) {
+            sb.append("FR ${fr.id}: (\n")
+            sb.append("  frequency: ${fr.frequency}\n")
+            sb.append("  actions: [\n")
+            for (act in fr.actions) {
+                sb.append("    $act\n")
+            }
+            sb.append("  ]\n")
+            sb.append("),\n")
+        }
+        sb.append("]\n")
+        return sb.toString()
     }
 
 

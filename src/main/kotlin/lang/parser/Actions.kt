@@ -7,72 +7,94 @@ sealed class Action {
     abstract var data0: Data
 }
 
+interface Generative
+interface Intermediate
+interface Absorbing
+interface Obtaining {
+    var resData: Data
+}
+interface Accepting {
+    var sender: Actor
+}
+
 // 1rst, gives data if there are no Generate or Read after it
-data class AcceptRequestFrom(var sender: Actor, override var data0: Data): Action() {
+data class AcceptRequestFrom(override var sender: Actor, override var data0: Data) : Action(), Accepting {
     companion object {
         val template: List<Token> = listOf(AcceptAction, RequestAction, FromAction, StructureName(""))
     }
 }
 
+data class AcceptFrom(override var sender: Actor, override var data0: Data) : Action(), Accepting {
+    companion object {
+        val template: List<Token> = listOf(AcceptAction, StructureName(""), FromAction, StructureName(""))
+    }
+}
+
 // Last one
-data class Return(override var data0: Data, var recipient: Actor): Action() {
+data class Return(override var data0: Data, var recipient: Actor) : Action() {
     companion object {
         val template: List<Token> = listOf(ReturnAction)
     }
 }
 
-interface Generative
-interface Intermediate
-interface Absorbing
-
 // Begins data stream (only after accept) - Generative
-data class Generate(override var data0: Data): Action(), Generative {
+data class Generate(override var data0: Data) : Action(), Generative {
     companion object {
         val template: List<Token> = listOf(GenerateAction, StructureName(""))
     }
 }
-data class Read(override var data0: Data): Action(), Generative {
+
+data class Read(override var data0: Data) : Action(), Generative {
     companion object {
         val template: List<Token> = listOf(ReadAction, StructureName(""))
     }
 }
 
 // Intermediate
-data class WorkWithObtaining(override var data0: Data, var workResult: Data): Action(), Intermediate {
+data class WorkWithObtaining(override var data0: Data, override var resData: Data) : Action(), Intermediate, Obtaining {
     companion object {
-        val template: List<Token> = listOf(WorkAction, WithAction, StructureName(""), ObtainingAction, StructureName(""))
+        val template: List<Token> =
+            listOf(WorkAction, WithAction, ItAction, ObtainingAction, StructureName(""))
     }
 }
-data class WorkWith(override var data0: Data): Action(), Intermediate {
+
+data class WorkWith(override var data0: Data) : Action(), Intermediate {
     companion object {
-        val template: List<Token> = listOf(WorkAction, WithAction, StructureName(""))
+        val template: List<Token> = listOf(WorkAction, WithAction, ItAction)
     }
 }
-data class SendToObtaining(override var data0: Data, var recipient: Actor, var answer: Data): Action(), Intermediate {
+
+data class SendToObtaining(override var data0: Data, var recipient: Actor, override var resData: Data) : Action(),
+    Intermediate, Obtaining {
     companion object {
-        val template: List<Token> = listOf(SendAction, StructureName(""), ToAction, StructureName(""),
-            ObtainingAction, StructureName(""))
+        val template: List<Token> = listOf(
+            SendAction, ItAction, ToAction, StructureName(""),
+            ObtainingAction, StructureName("")
+        )
     }
 }
 
 // Actually ends data stream - Absorbing
-data class SendTo(override var data0: Data, var recipient: Actor): Action(), Absorbing {
+data class SendTo(override var data0: Data, var recipient: Actor) : Action(), Absorbing {
     companion object {
-        val template: List<Token> = listOf(SendAction, StructureName(""), ToAction, StructureName(""))
+        val template: List<Token> = listOf(SendAction, ItAction, ToAction, StructureName(""))
     }
 }
-data class Save(override var data0: Data): Action(), Absorbing {
+
+data class Save(override var data0: Data) : Action(), Absorbing {
     companion object {
-        val template: List<Token> = listOf(SaveAction, StructureName(""))
+        val template: List<Token> = listOf(SaveAction, ItAction)
     }
 }
-data class Update(override var data0: Data): Action(), Absorbing {
+
+data class Update(override var data0: Data) : Action(), Absorbing {
     companion object {
-        val template: List<Token> = listOf(UpdateAction, StructureName(""))
+        val template: List<Token> = listOf(UpdateAction, ItAction)
     }
 }
-data class Delete(override var data0: Data): Action(), Absorbing {
+
+data class Delete(override var data0: Data) : Action(), Absorbing {
     companion object {
-        val template: List<Token> = listOf(DeleteAction, StructureName(""))
+        val template: List<Token> = listOf(DeleteAction, ItAction)
     }
 }

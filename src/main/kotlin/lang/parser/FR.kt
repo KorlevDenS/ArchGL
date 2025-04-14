@@ -21,10 +21,10 @@ data class FR (
     }
 
     override fun toString(): String {
-        return "FR(id='$id',\n" +
-                "frequency=$frequency,\n" +
-                "actions=$actions,\n" +
-                "installedProps=$installedProps\n)"
+        return "FR(id='$id'," +
+                "frequency=$frequency," +
+                "actions=$actions," +
+                "installedProps=$installedProps)"
     }
 
 

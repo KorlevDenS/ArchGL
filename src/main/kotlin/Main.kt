@@ -1,24 +1,8 @@
 package domain.specific
 
 import domain.specific.lang.lexer.*
-import domain.specific.lang.parser.Actor
 import domain.specific.lang.parser.Parser
 
-abstract class Animal {
-    abstract fun sound(): String
-}
-
-class Dog : Animal() {
-    override fun sound() = "Woof"
-}
-
-class Cat : Animal() {
-    override fun sound() = "Meow"
-}
-
-class Bird : Animal() {
-    override fun sound() = "Chirp"
-}
 
 fun main() {
 
@@ -82,10 +66,87 @@ fun main() {
                 actions: (
                     accept request from PCClient,
                     read SMS,
-                    work with SMS obtaining Image,
-                    send Image to Server1 obtaining MyWebPage, 
-                    work with MyWebPage,
-                    save MyWebPage,
+                    work with it obtaining Image,
+                    send it to Server1 obtaining MyWebPage, 
+                    work with it,
+                    save it,
+                    return
+                )
+                frequency: 1100
+            }
+            
+            fr SecondFR_name {
+                actions: (
+                    accept request from PCClient,
+                    return
+                )
+                frequency: 2100
+            }
+        }
+    """
+
+    val input2 = """
+        app MyTestService {
+            usersNumber: 10000000
+            scaleVertically: "yes"
+            latency: 99.999
+            
+            actor PCClient {
+                type: "web-client"
+            }
+            actor Server1 {
+                type: "service"
+            }
+            data SMS {
+                type: "text"
+                retention: 12
+                unitVolume: 240
+            }
+            data Image {
+                type: "image"
+                retention: 1500
+                unitVolume: 432000
+            }
+            data MyWebPage {
+                type: "html"
+                retention: 1500
+                unitVolume: 432000
+            }
+            
+            fr SomeFR_name {
+                actions: (
+                    accept SMS from PCClient,
+                    work with it obtaining Image,
+                    send it to Server1 obtaining MyWebPage, 
+                    work with it,
+                    save it,
+                    return
+                )
+                frequency: 1100
+            }
+           
+        }
+    """
+
+    val input3 = """
+        app MyTestService {
+            usersNumber: 10000000
+            scaleVertically: "yes"
+            latency: 99.999
+            
+            actor PCClient {
+                type: "web-client"
+            }
+            
+            data SMS {
+                type: "text"
+                retention: 12
+                unitVolume: 240
+            }
+            
+            fr SomeFR_name {
+                actions: (
+                    accept request from PCClient,
                     return
                 )
                 frequency: 1100
