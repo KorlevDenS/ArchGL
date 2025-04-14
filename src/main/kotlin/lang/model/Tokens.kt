@@ -1,4 +1,4 @@
-package domain.specific.lang.lexer
+package domain.specific.lang.model
 
 val structureTypes: List<String> = listOf(
     "app",

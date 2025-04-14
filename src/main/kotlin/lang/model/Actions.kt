@@ -1,6 +1,4 @@
-package domain.specific.lang.parser
-
-import domain.specific.lang.lexer.*
+package domain.specific.lang.model
 
 
 sealed class Action {

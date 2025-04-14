@@ -1,5 +1,7 @@
 package domain.specific.lang.lexer
 
+import domain.specific.lang.model.*
+
 class Lexer(
     private val input: String
 ) {

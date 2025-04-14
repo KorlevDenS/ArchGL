@@ -1,6 +1,6 @@
 package domain.specific.lang.parser
 
-import domain.specific.lang.lexer.*
+import domain.specific.lang.model.*
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.jvm.jvmErasure

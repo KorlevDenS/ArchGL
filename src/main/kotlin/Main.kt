@@ -1,6 +1,8 @@
 package domain.specific
 
 import domain.specific.lang.lexer.*
+import domain.specific.lang.model.EOF
+import domain.specific.lang.model.Token
 import domain.specific.lang.parser.Parser
 
 

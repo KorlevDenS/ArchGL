@@ -1,4 +1,4 @@
-package domain.specific.lang.parser
+package domain.specific.lang.model
 
 data class Application (
 
@@ -49,6 +49,7 @@ data class Application (
         for (fr in frs) {
             sb.append("FR ${fr.id}: (\n")
             sb.append("  frequency: ${fr.frequency}\n")
+            sb.append("  installed props: ${fr.installedProps}\n")
             sb.append("  actions: [\n")
             for (act in fr.actions) {
                 sb.append("    $act\n")

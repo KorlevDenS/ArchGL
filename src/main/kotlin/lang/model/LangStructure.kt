@@ -1,4 +1,4 @@
-package domain.specific.lang.parser
+package domain.specific.lang.model
 
 interface LangStructure {
     var id: String
