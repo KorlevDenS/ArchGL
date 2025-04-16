@@ -104,6 +104,15 @@ class Parser(
 
                 is CloseCurlyBrace -> {
                     app.actors.add(actor)
+                    app.data.add(
+                        Data(
+                            id = actor.id,
+                            type = "actor-data",
+                            retention = 1577880000000,
+                            unitVolume = 700,
+                            installedProps = mutableSetOf("type", "retention", "unitVolume")
+                        )
+                    )
                     position++
                     return
                 }
@@ -251,6 +260,13 @@ class Parser(
                     getDataFromName(frActionWords, 1)
                 )
             )
+        } else if (frActionWords.compareWithTemplate(ReadRelated.template)) {
+            this.addActionToStream(
+                ReadRelated(
+                    getDataFromName(frActionWords, 1),
+                    getDataFromName(frActionWords, 3)
+                )
+            )
         } else if (frActionWords.compareWithTemplate(WorkWithObtaining.template)) {
             this.addActionToStream(
                 WorkWithObtaining(
@@ -277,9 +293,23 @@ class Parser(
                     Data.DefaultRequest
                 )
             )
+        } else if (frActionWords.compareWithTemplate(SaveRelated.template)) {
+            this.addActionToStream(
+                SaveRelated(
+                    getDataFromName(frActionWords, 1),
+                    Data.DefaultRequest
+                )
+            )
         } else if (frActionWords.compareWithTemplate(Update.template)) {
             this.addActionToStream(
                 Update(
+                    Data.DefaultRequest
+                )
+            )
+        } else if (frActionWords.compareWithTemplate(UpdateRelated.template)) {
+            this.addActionToStream(
+                UpdateRelated(
+                    getDataFromName(frActionWords, 1),
                     Data.DefaultRequest
                 )
             )
@@ -288,6 +318,11 @@ class Parser(
                 Delete(
                     Data.DefaultRequest
                 )
+            )
+        } else if (frActionWords.compareWithTemplate(DeleteRelated.template)) {
+            DeleteRelated(
+                getDataFromName(frActionWords, 1),
+                Data.DefaultRequest
             )
         } else if (frActionWords.compareWithTemplate(SendToObtaining.template)) {
             this.addActionToStream(

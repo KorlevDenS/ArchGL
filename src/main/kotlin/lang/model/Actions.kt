@@ -8,6 +8,10 @@ sealed class Action {
 interface Generative
 interface Intermediate
 interface Absorbing
+interface UsingDB
+interface UsingDBRelated: UsingDB {
+    var related: Data
+}
 interface Obtaining {
     var resData: Data
 }
@@ -42,9 +46,15 @@ data class Generate(override var data0: Data) : Action(), Generative {
     }
 }
 
-data class Read(override var data0: Data) : Action(), Generative {
+data class Read(override var data0: Data) : Action(), Generative, UsingDB {
     companion object {
         val template: List<Token> = listOf(ReadAction, StructureName(""))
+    }
+}
+
+data class ReadRelated(override var related: Data, override var data0: Data) : Action(), Generative, UsingDBRelated {
+    companion object {
+        val template: List<Token> = listOf(ReadAction, StructureName(""), RelatedAction, StructureName(""))
     }
 }
 
@@ -79,20 +89,38 @@ data class SendTo(override var data0: Data, var recipient: Actor) : Action(), Ab
     }
 }
 
-data class Save(override var data0: Data) : Action(), Absorbing {
+data class Save(override var data0: Data) : Action(), Absorbing, UsingDB {
     companion object {
         val template: List<Token> = listOf(SaveAction, ItAction)
     }
 }
 
-data class Update(override var data0: Data) : Action(), Absorbing {
+data class SaveRelated(override var related: Data, override var data0: Data) : Action(), Absorbing, UsingDBRelated {
+    companion object {
+        val template: List<Token> = listOf(SaveAction, StructureName(""), RelatedAction, ItAction)
+    }
+}
+
+data class Update(override var data0: Data) : Action(), Absorbing, UsingDB {
     companion object {
         val template: List<Token> = listOf(UpdateAction, ItAction)
     }
 }
 
-data class Delete(override var data0: Data) : Action(), Absorbing {
+data class UpdateRelated(override var related: Data, override var data0: Data) : Action(), Absorbing, UsingDBRelated {
+    companion object {
+        val template: List<Token> = listOf(UpdateAction, StructureName(""), RelatedAction, ItAction)
+    }
+}
+
+data class Delete(override var data0: Data) : Action(), Absorbing, UsingDB {
     companion object {
         val template: List<Token> = listOf(DeleteAction, ItAction)
+    }
+}
+
+data class DeleteRelated(override var related: Data, override var data0: Data) : Action(), Absorbing, UsingDBRelated {
+    companion object {
+        val template: List<Token> = listOf(DeleteAction, StructureName(""), RelatedAction, ItAction)
     }
 }

@@ -14,7 +14,9 @@ data class Data (
 
     companion object {
 
-        val DefaultRequest: Data = Data()
+        val DefaultRequest: Data = Data(
+            installedProps = mutableSetOf("type", "retention", "unitVolume")
+        )
 
         val estimatedProps: List<String> = listOf(
             "type",
@@ -23,6 +25,7 @@ data class Data (
         )
 
         val types: List<String> = listOf(
+            "notification",
             "image",
             "text",
             "number",
