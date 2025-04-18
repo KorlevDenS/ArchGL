@@ -7,46 +7,141 @@ class ArchGenerator(
 ) {
     private val graph: ArchGraph = ArchGraph()
 
+    private fun addAbsorbBranches(action: Action, nodeToContinue: ArchNode, fr: FR) {
+        if (action is PrecedeAbsorbing) {
+            for (a in action.absorbers) {
+                when (a) {
+                    is UsingDB -> {
+                        val dataServiceNode = DataServiceNode(a.data0.id)
+                        dataServiceNode.addUsage(fr, a)
+                        graph.addConnection(nodeToContinue, dataServiceNode)
+                        val dataNode = DataNode(a.data0.id)
+                        dataNode.addUsage(fr, a)
+                        graph.addConnection(dataServiceNode, dataNode)
+                        if (a is UsingDBRelated) {
+                            val relatedDataNode = DataNode(a.related.id)
+                            relatedDataNode.addUsage(fr, a)
+                            graph.addConnection(dataServiceNode, relatedDataNode)
+                        }
+                    }
+                    is SendTo -> {
+                        val messageServiceNode = MessageServiceNode(a.data0.id)
+                        messageServiceNode.addUsage(fr, a)
+                        graph.addConnection(nodeToContinue, messageServiceNode)
+                        val dataNode = DataNode(a.recipient.id)
+                        dataNode.addUsage(fr, a)
+                        graph.addConnection(messageServiceNode, dataNode)
+                        val actorConsumerNode = ActorConsumerNode(a.recipient.id)
+                        actorConsumerNode.addUsage(fr, a)
+                        graph.addConnection(messageServiceNode, actorConsumerNode)
+                    }
+                    else -> {}
+                }
+            }
+        }
+    }
+
+    fun getFirstNodeToContinue(action: Action): ArchNode {
+        when (action) {
+            is Process -> {
+                return ProcessingServiceNode(action.data0.id)
+            }
+
+            is Generate -> {
+                return GeneratingServiceNode(action.data0.id)
+            }
+
+            is ProcessObtaining -> {
+                return TransformingServiceNode(action.data0.id, action.resData.id)
+            }
+
+            is SendToObtaining -> {
+                return MessageServiceNode(action.data0.id)
+            }
+
+            is Read, is ReadRelated -> {
+                return DataServiceNode(action.data0.id)
+            }
+
+            else -> {
+                throw StructureException("Unknown first node action")
+            }
+        }
+    }
+
     fun generate(): ArchGraph {
 
         for (fr in semanticTree.frs) {
             var nodeToContinue: ArchNode
 
-            val serverNode = ServerNode("Web")
-            graph.addConnection(ActorNode((fr.actions[0] as Accepting).sender.id), serverNode)
-            nodeToContinue = serverNode
+
+            if (fr.actions[0] is Accepting) {
+                val serverNode = ServerNode("Web")
+                serverNode.addUsage(fr, fr.actions[0])
+                val actorNode = ActorNode((fr.actions[0] as Accepting).sender.id)
+                actorNode.addUsage(fr, fr.actions[0])
+                graph.addConnection(actorNode, serverNode)
+                nodeToContinue = serverNode
+                addAbsorbBranches(fr.actions[0], nodeToContinue, fr)
+            } else {
+                nodeToContinue = getFirstNodeToContinue(fr.actions[0])
+            }
 
             for (index in 1..<fr.actions.size) {
                 when (val action = fr.actions[index]) {
-                    is UsingDB -> {
-                        val serviceNode = ServiceNode(action.data0.id)
-                        graph.addConnection(nodeToContinue, serviceNode)
-                        graph.addConnection(serviceNode, DataNode(action.data0.id))
-                        nodeToContinue = serviceNode
-                        if (action is UsingDBRelated) {
-                            graph.addConnection(serviceNode, DataNode(action.related.id))
-                        }
+                    is Accepting -> {
+
                     }
-                    is WorkWith -> {
-                        val serviceNode = ServiceNode(action.data0.id)
-                        graph.addConnection(nodeToContinue, serviceNode)
-                        nodeToContinue = serviceNode
+                    is Process -> {
+                        val dataProcessingServiceNode = ProcessingServiceNode(action.data0.id)
+                        dataProcessingServiceNode.addUsage(fr, action)
+                        graph.addConnection(nodeToContinue, dataProcessingServiceNode)
+                        nodeToContinue = dataProcessingServiceNode
                     }
-                    is WorkWithObtaining -> {
-                        val serviceNode = ServiceNode(
-                            action.data0.id + "To" + action.resData.id
+                    is Generate -> {
+                        val dataGeneratingServiceNode = GeneratingServiceNode(action.data0.id)
+                        dataGeneratingServiceNode.addUsage(fr, action)
+                        graph.addConnection(nodeToContinue, dataGeneratingServiceNode)
+                        nodeToContinue = dataGeneratingServiceNode
+                    }
+                    is ProcessObtaining -> {
+                        val dataProcessingServiceNode = TransformingServiceNode(
+                            action.data0.id,
+                            action.resData.id
                         )
-                        graph.addConnection(nodeToContinue, serviceNode)
-                        nodeToContinue = serviceNode
+                        dataProcessingServiceNode.addUsage(fr, action)
+                        graph.addConnection(nodeToContinue, dataProcessingServiceNode)
+                        nodeToContinue = dataProcessingServiceNode
                     }
-                    is SendTo -> {
+                    is SendToObtaining -> {
                         val messageServiceNode = MessageServiceNode(action.data0.id)
+                        messageServiceNode.addUsage(fr, action)
                         graph.addConnection(nodeToContinue, messageServiceNode)
-                        graph.addConnection(messageServiceNode, DataNode(action.recipient.id))
-                        graph.addConnection(messageServiceNode, ActorConsumerNode(action.recipient.id))
+                        val dataNode = DataNode(action.recipient.id)
+                        dataNode.addUsage(fr, action)
+                        graph.addConnection(messageServiceNode, dataNode)
+                        val actorConsumerNode = ActorConsumerNode(action.recipient.id)
+                        actorConsumerNode.addUsage(fr, action)
+                        graph.addConnection(messageServiceNode, actorConsumerNode)
+                        nodeToContinue = messageServiceNode
+                    }
+                    is Read, is ReadRelated -> {
+                        val dataServiceNode = DataServiceNode(action.data0.id)
+                        dataServiceNode.addUsage(fr, action)
+                        graph.addConnection(nodeToContinue, dataServiceNode)
+                        val dataNode = DataNode(action.data0.id)
+                        dataNode.addUsage(fr, action)
+                        graph.addConnection(dataServiceNode, dataNode)
+                        nodeToContinue = dataServiceNode
+                        if (action is UsingDBRelated) {
+                            val relatedDataNode = DataNode(action.related.id)
+                            relatedDataNode.addUsage(fr, action)
+                            graph.addConnection(dataServiceNode, relatedDataNode)
+                        }
                     }
                     else -> {}
                 }
+                addAbsorbBranches(fr.actions[index], nodeToContinue, fr)
             }
         }
 

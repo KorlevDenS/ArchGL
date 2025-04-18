@@ -4,6 +4,23 @@ class ArchGraph {
 
     private val adjacencyList: MutableMap<ArchNode, MutableList<ArchNode>> = mutableMapOf()
 
+    fun addAndFillNodeIfNotFound(node: ArchNode): ArchNode {
+        val maybeExistingNode = findNodeById(node.id)
+        maybeExistingNode?.let {
+            for ((key, value) in node.usage) {
+                if (maybeExistingNode.usage.containsKey(key)) {
+                    maybeExistingNode.usage[key]?.addAll(value)
+                } else {
+                    maybeExistingNode.usage[key] = value.toMutableList()
+                }
+            }
+            return maybeExistingNode
+        } ?: run {
+            adjacencyList.putIfAbsent(node, mutableListOf())
+            return node
+        }
+    }
+
     fun addNodeIfNotFound(node: ArchNode): ArchNode {
         val maybeExistingNode = findNodeById(node.id)
         maybeExistingNode?.let {
@@ -16,7 +33,7 @@ class ArchGraph {
 
     fun addConnection(from: ArchNode, to: ArchNode) {
         val fromNode = addNodeIfNotFound(from)
-        val toNode = addNodeIfNotFound(to)
+        val toNode = addAndFillNodeIfNotFound(to)
         if (toNode !in adjacencyList[fromNode]!!) {
             adjacencyList[fromNode]?.add(toNode)
         }

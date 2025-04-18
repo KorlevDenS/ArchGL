@@ -26,9 +26,8 @@ fun main() {
     
             fr SomeFR_name {
                 actions: (
-                    accept request from SomeUserName,
-                    read SomeDataName,
-                    send it to SomeUserName
+                    accept SomeUserName from SomeUserName,
+                    save it
                 )
                 frequency: 1100
             }
@@ -117,9 +116,9 @@ fun main() {
             fr SomeFR_name {
                 actions: (
                     accept SMS from PCClient,
-                    work with it obtaining Image,
+                    process it obtaining Image,
                     send it to Server1 obtaining MyWebPage, 
-                    work with it,
+                    process it,
                     save it,
                     return
                 )
@@ -162,27 +161,67 @@ fun main() {
             
             fr PublishNewPost {
                 actions: (
+                    accept Post from User
+                    
+                )
+                frequency: 1100
+            }
+            
+            fr PublishNewPost {
+                actions: (
                     accept Post from User,
                     save it,
-                    return
-                )
-                frequency: 1100
-            }
-            
-            fr UpdateUsersNewsFeed {
-                actions: (
-                    accept Post from User,
-                    work with it obtaining NewsFeed,
-                    update User related it
-                )
-                frequency: 1100
-            }
-            
-            fr SendNotificationAfterNewPost {
-                actions: (
-                    accept Post from User,
-                    work with it obtaining Notification,
+                    process it,
+                    process it obtaining Notification,
                     send it to User
+                    
+                )
+                frequency: 1100
+            }
+            
+        }
+    """
+
+    val input4 = """
+        app NewsFeedApp {
+            usersNumber: 10000000
+            scaleVertically: "no"
+            scaleHorizontally: "yes"
+            latency: 99.999
+            dayUsersNumber: 500000
+            availability: 98.5
+            
+            actor User {
+                type: "web-client"
+            }
+            
+            data Post {
+                type: "text"
+                retention: 157680000000
+                unitVolume: 16000
+            }
+            
+            data NewsFeed {
+                type: "text"
+                retention: 60000
+                unitVolume: 480000
+            }
+            
+            data Notification {
+                type: "text"
+                retention: 0
+                unitVolume: 320
+            }
+            
+            fr PublishNewPost {
+                actions: (
+                    accept Post from User,
+                    save it,
+                    process it,
+                    save it,
+                    process it,
+                    save it,
+                    return
                 )
                 frequency: 1100
             }

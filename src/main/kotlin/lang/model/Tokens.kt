@@ -15,7 +15,7 @@ val actionWords: List<String> = listOf(
     "related",
     "update",
     "delete",
-    "work", "with", "obtaining",
+    "process", "obtaining",
     "generate",
     "return",
     "accept", "request", "from"
@@ -38,8 +38,7 @@ data object ReadAction : Token(), ActionWord
 data object RelatedAction : Token(), ActionWord
 data object DeleteAction : Token(), ActionWord
 data object UpdateAction : Token(), ActionWord
-data object WorkAction : Token(), ActionWord
-data object WithAction : Token(), ActionWord
+data object ProcessAction : Token(), ActionWord
 data object ObtainingAction : Token(), ActionWord
 data object GenerateAction : Token(), ActionWord
 data object ReturnAction: Token(), ActionWord
@@ -86,8 +85,7 @@ fun getActionToken(token: String): Token {
         "related" -> RelatedAction
         "update" -> UpdateAction
         "delete" -> DeleteAction
-        "work" -> WorkAction
-        "with" -> WithAction
+        "process" -> ProcessAction
         "obtaining" -> ObtainingAction
         "generate" -> GenerateAction
         "return" -> ReturnAction

@@ -1,6 +1,7 @@
 package domain.specific.lang.parser
 
 import domain.specific.lang.model.*
+import kotlin.math.min
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.jvm.jvmErasure
@@ -50,11 +51,11 @@ class Parser(
         throw RuntimeException("Critical error while while setting property $propName in ${struct.id}!")
     }
 
-    private fun checkStructNameUniqueness(name: String): Boolean {
+    private fun checkStructNameUniqueness(name: String, isActionStruct: Boolean): Boolean {
         return name != app.id &&
                 name !in app.data.map { it.id } &&
                 name !in app.actors.map { it.id } &&
-                name !in app.frs.map { it.id }
+                (isActionStruct || name !in app.frs.map { it.id })
     }
 
     private fun parseProp(struct: LangStructure) {
@@ -71,7 +72,7 @@ class Parser(
         }
     }
 
-    private fun parseInnerStructStart() {
+    private fun parseInnerStructStart(isActionStruct: Boolean) {
         when {
             position + 2 >= checkSize -> {
                 throw ParserException("Wrong struct definition!", position)
@@ -81,7 +82,7 @@ class Parser(
                 throw ParserException("Missing struct name", position + 1)
             }
 
-            !checkStructNameUniqueness((input[position + 1] as StructureName).name) -> {
+            !checkStructNameUniqueness((input[position + 1] as StructureName).name, isActionStruct) -> {
                 throw ParserException("This structure name is already in use!", position + 1)
             }
 
@@ -93,7 +94,7 @@ class Parser(
     }
 
     private fun parseActor() {
-        parseInnerStructStart()
+        parseInnerStructStart(false)
         val actor = Actor()
         actor.id = (input[position - 2] as StructureName).name
         while (position < checkSize) {
@@ -124,7 +125,7 @@ class Parser(
     }
 
     private fun parseData() {
-        parseInnerStructStart()
+        parseInnerStructStart(false)
         val data = Data()
         data.id = (input[position - 2] as StructureName).name
         while (position < checkSize) {
@@ -159,36 +160,42 @@ class Parser(
                 throw ParserException("Actions after 'return' are not allowed!", position)
             }
 
-            is Absorbing -> {
-                if (action is Return) {
-                    this.add(action)
-                    return
-                } else {
-                    throw ParserException("Only 'return' is allowed after absorbing action!", position)
-                }
-            }
-
             is Generative, is Intermediate -> {
-                if (action is Intermediate || action is Absorbing || action is Return) {
-                    this.add(action)
-                    return
-                } else {
-                    throw ParserException(
-                        "Only intermediate, absorbing and 'return' actions allowed after generative or intermediate!",
-                        position
-                    )
+                when (action) {
+                    is Intermediate, is Return -> {
+                        this.add(action)
+                        return
+                    }
+
+                    is Absorbing -> {
+                        (this.last() as PrecedeAbsorbing).absorbers.add(action)
+                    }
+
+                    else -> {
+                        throw ParserException(
+                            "Only intermediate, absorbing and 'return' actions allowed after generative or intermediate!",
+                            position
+                        )
+                    }
                 }
             }
 
             is Accepting -> {
                 if (action !is Accepting) {
                     if (previous is AcceptRequestFrom && action !is Generative && action !is Return) {
-                        throw ParserException("Only Generative actions or 'return' can follow 'accept request from'", position)
+                        throw ParserException(
+                            "Only Generative actions or 'return' can follow 'accept request from'",
+                            position
+                        )
                     }
                     if (previous is AcceptFrom && action is Generative) {
                         throw ParserException("Only Not Generative actions can follow 'accept YourData from'", position)
                     }
-                    this.add(action)
+                    if (action is Absorbing) {
+                        (this.last() as PrecedeAbsorbing).absorbers.add(action)
+                    } else {
+                        this.add(action)
+                    }
                     return
                 } else {
                     throw ParserException("Accept action is allowed once in fr!", position)
@@ -210,7 +217,7 @@ class Parser(
         val dataName = (actionWords[pos] as StructureName).name
         val data = app.data.find { it.id == dataName }
         data?.let {
-            return data
+            return it
         } ?: run {
             throw ParserException("Data with name $dataName is undefined!", position)
         }
@@ -220,7 +227,7 @@ class Parser(
         val actorName = (actionWords[pos] as StructureName).name
         val actor = app.actors.find { it.id == actorName }
         actor?.let {
-            return actor
+            return it
         } ?: run {
             throw ParserException("Actor with name $actorName is undefined!", position)
         }
@@ -267,16 +274,16 @@ class Parser(
                     getDataFromName(frActionWords, 3)
                 )
             )
-        } else if (frActionWords.compareWithTemplate(WorkWithObtaining.template)) {
+        } else if (frActionWords.compareWithTemplate(ProcessObtaining.template)) {
             this.addActionToStream(
-                WorkWithObtaining(
+                ProcessObtaining(
                     Data.DefaultRequest,
-                    getDataFromName(frActionWords, 4)
+                    getDataFromName(frActionWords, 3)
                 )
             )
-        } else if (frActionWords.compareWithTemplate(WorkWith.template)) {
+        } else if (frActionWords.compareWithTemplate(Process.template)) {
             this.addActionToStream(
-                WorkWith(
+                Process(
                     Data.DefaultRequest
                 )
             )
@@ -339,23 +346,33 @@ class Parser(
     }
 
     private fun MutableList<Action>.checkDataStream() {
-        if (this.size < 2) {
+        if (this.isEmpty()) {
             return
         }
         var streamData: Data
         if (this[0] is AcceptRequestFrom) {
-            streamData = this[1].data0
-        } else {
-            streamData = this[0].data0
-            this[1].data0 = streamData
-            if (this[1] is Obtaining) {
-                streamData = (this[1] as Obtaining).resData
+            if (this.size > 1) {
+                streamData = this[1].data0
+            } else {
+                return
             }
+        } else if (this[0] is AcceptFrom) {
+            streamData = this[0].data0
+            for (a in (this[0] as PrecedeAbsorbing).absorbers) {
+                a.data0 = streamData
+            }
+        } else {
+            throw ParserException("Unknown first action!", position)
         }
-        for (i in 2..<this.size) {
+        for (i in 1..<this.size) {
             this[i].data0 = streamData
             if (this[i] is Obtaining) {
                 streamData = (this[i] as Obtaining).resData
+            }
+            if (this[i] is PrecedeAbsorbing) {
+                for (a in (this[i] as PrecedeAbsorbing).absorbers) {
+                    a.data0 = streamData
+                }
             }
         }
     }
@@ -407,7 +424,7 @@ class Parser(
     }
 
     private fun parseFR() {
-        parseInnerStructStart()
+        parseInnerStructStart(true)
         val fr = FR()
         fr.id = (input[position - 2] as StructureName).name
         while (position < checkSize) {
@@ -430,6 +447,66 @@ class Parser(
             }
         }
         throw ParserException("Expected fr property or }", position)
+    }
+
+    private fun PrecedeAbsorbing.join(action: PrecedeAbsorbing) {
+        for (abs in action.absorbers) {
+            if (abs !in this.absorbers) {
+                this.absorbers.add(abs)
+            }
+        }
+    }
+
+    private fun joinEponymousFrs() {
+        val groupedLists: Map<String, List<FR>> = app.frs.groupBy { it.id }
+        app.frs.clear()
+
+        for (key in groupedLists.keys) {
+            val unitedFrs = groupedLists[key]!!
+
+            if (unitedFrs.size > 1) {
+                if (unitedFrs.map { it.actions.first() }.distinct().size != 1) {
+                    throw ParserException(
+                        "In functional requirements with the same names," +
+                                "at least the first action must match.", position
+                    )
+                }
+
+                val blackList: MutableList<Int> = mutableListOf()
+
+
+                for (i in 1..<unitedFrs.size) {
+                    unitedFrs[i].actions[0] = Dummy()
+                }
+
+                for (i in 0..<unitedFrs.size) {
+                    val mainActions = unitedFrs[i].actions
+                    for (index in (i + 1)..<unitedFrs.size) {
+                        if (index !in blackList) {
+                            val foodActions = unitedFrs[index].actions
+                            val minSize = min(mainActions.size, foodActions.size)
+                            for (pos in 1..<minSize) {
+                                if (mainActions[pos] == foodActions[pos]) {
+                                    if (foodActions[pos - 1] is PrecedeAbsorbing) {
+                                        (mainActions[pos - 1] as PrecedeAbsorbing)
+                                            .join(foodActions[pos - 1] as PrecedeAbsorbing)
+                                    }
+                                    foodActions[pos - 1] = Dummy()
+                                    println("DONE")
+                                } else {
+                                    blackList.add(index)
+                                }
+                            }
+                        }
+                    }
+                    blackList.clear()
+                }
+            }
+            unitedFrs.forEach { it ->
+                it.actions.removeIf { it is Dummy }
+                app.frs.add(it)
+            }
+        }
     }
 
     fun parse(): Application {
@@ -479,6 +556,7 @@ class Parser(
                 else -> throw ParserException("Expected internal structure or property", position)
             }
         }
+        joinEponymousFrs()
         return app
     }
 
