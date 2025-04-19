@@ -43,6 +43,11 @@ class ArchGenerator(
 
     fun getFirstNodeToContinue(action: Action): ArchNode {
         when (action) {
+
+            is AcceptingLink -> {
+                return ServerNode("Web")
+            }
+
             is Process -> {
                 return ProcessingServiceNode(action.data0.id)
             }
@@ -73,7 +78,6 @@ class ArchGenerator(
 
         for (fr in semanticTree.frs) {
             var nodeToContinue: ArchNode
-
 
             if (fr.actions[0] is Accepting) {
                 val serverNode = ServerNode("Web")

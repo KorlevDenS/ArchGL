@@ -113,14 +113,22 @@ fun main() {
                 unitVolume: 432000
             }
             
+            fr SomeFR_name2 {
+                actions: (
+                    accept SMS from Server1,
+                    process it obtaining Image,
+                    save it
+                )
+                frequency: 1100
+            }
+            
             fr SomeFR_name {
                 actions: (
                     accept SMS from PCClient,
                     process it obtaining Image,
                     send it to Server1 obtaining MyWebPage, 
                     process it,
-                    save it,
-                    return
+                    save it
                 )
                 frequency: 1100
             }
@@ -161,8 +169,19 @@ fun main() {
             
             fr PublishNewPost {
                 actions: (
-                    accept Post from User
-                    
+                    accept Post from User,
+                    save it,
+                    process it obtaining NewsFeed,
+                    update User related it
+                )
+                frequency: 1100
+            }
+           
+            fr PublishNewPost {
+                actions: (
+                    accept Post from User,
+                    process it obtaining Notification,
+                    send it to User 
                 )
                 frequency: 1100
             }
@@ -170,11 +189,8 @@ fun main() {
             fr PublishNewPost {
                 actions: (
                     accept Post from User,
-                    save it,
-                    process it,
                     process it obtaining Notification,
-                    send it to User
-                    
+                    send it to User 
                 )
                 frequency: 1100
             }
@@ -220,11 +236,23 @@ fun main() {
                     process it,
                     save it,
                     process it,
-                    save it,
-                    return
+                    save it
                 )
                 frequency: 1100
             }
+            
+            fr PublishNewPost {
+                actions: (
+                    accept Post from User,
+                    save it,
+                    process it,
+                    save it,
+                    process it,
+                    save it
+                )
+                frequency: 1100
+            }
+            
             
         }
     """
@@ -232,7 +260,7 @@ fun main() {
     val tokens: MutableList<Token> = mutableListOf()
     val tokenTextPositions: MutableList<Int> = mutableListOf()
 
-    val lexer = Lexer(input3)
+    val lexer = Lexer(input4)
     while (true) {
         val token = lexer.nextToken()
         if (token.second == EOF) {

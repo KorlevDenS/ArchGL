@@ -462,7 +462,7 @@ class Parser(
         app.frs.clear()
 
         for (key in groupedLists.keys) {
-            val unitedFrs = groupedLists[key]!!
+            val unitedFrs = groupedLists[key]!!.toMutableList()
 
             if (unitedFrs.size > 1) {
                 if (unitedFrs.map { it.actions.first() }.distinct().size != 1) {
@@ -476,7 +476,10 @@ class Parser(
 
 
                 for (i in 1..<unitedFrs.size) {
-                    unitedFrs[i].actions[0] = Dummy()
+                    if (unitedFrs[0].actions[0] is PrecedeAbsorbing) {
+                        (unitedFrs[0].actions[0] as PrecedeAbsorbing).join(unitedFrs[i].actions[0] as PrecedeAbsorbing)
+                    }
+                    unitedFrs[i].actions[0] = AcceptingLink(unitedFrs[0].actions[0])
                 }
 
                 for (i in 0..<unitedFrs.size) {
@@ -492,7 +495,6 @@ class Parser(
                                             .join(foodActions[pos - 1] as PrecedeAbsorbing)
                                     }
                                     foodActions[pos - 1] = Dummy()
-                                    println("DONE")
                                 } else {
                                     blackList.add(index)
                                 }
@@ -501,9 +503,30 @@ class Parser(
                     }
                     blackList.clear()
                 }
+
+//                val firstAccept = unitedFrs[0].actions[0]
+//                for (i in 1..<unitedFrs.size) {
+//                    if (firstAccept is PrecedeAbsorbing && unitedFrs[i].actions[0] is PrecedeAbsorbing) {
+//                        firstAccept.join(unitedFrs[i].actions[0] as PrecedeAbsorbing)
+//                        unitedFrs[i].actions[0] = Dummy()
+//                    }
+//                }
+
+//                for (i in 1..<unitedFrs.size) {
+//                    if (unitedFrs[i].actions.size == 1 && unitedFrs[i].actions[0] !is Accepting) {
+//                        unitedFrs[i].actions[0] = Dummy()
+//                    }
+//                    if (unitedFrs[i].actions.size > 1 && unitedFrs[i].actions[1] is Dummy) {
+//                        unitedFrs[i].actions[0] = Dummy()
+//                    }
+//                }
+//                unitedFrs.removeIf { it.actions.size == 1 && it.actions[0] is Accepting }
             }
             unitedFrs.forEach { it ->
                 it.actions.removeIf { it is Dummy }
+            }
+            unitedFrs.removeIf { it.actions.isEmpty() }
+            unitedFrs.forEach { it ->
                 app.frs.add(it)
             }
         }

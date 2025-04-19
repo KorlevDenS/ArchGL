@@ -29,6 +29,13 @@ data class Dummy(override var data0: Data = Data.DefaultRequest): Action() {
     }
 }
 
+data class AcceptingLink(var link: Action, override var data0: Data = Data.DefaultRequest,): Action() {
+    override fun describe(): String {
+        return "Is link to '${link.describe()}'"
+    }
+
+}
+
 // 1rst, gives data if there are no Generate or Read after it
 data class AcceptRequestFrom(override var sender: Actor, override var data0: Data) : Action(), Accepting {
     override fun describe(): String {
