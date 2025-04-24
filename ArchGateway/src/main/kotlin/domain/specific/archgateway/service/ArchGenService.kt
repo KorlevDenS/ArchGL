@@ -45,6 +45,7 @@ class ArchGenService {
         val generator = ArchGenerator(semanticTree)
         val graph = generator.generate()
         val umlGenerator = UmlGenerator(graph)
+        println(umlGenerator.generateUml())
         return umlGenerator.generateUml()
 //        println(graph)
     }
