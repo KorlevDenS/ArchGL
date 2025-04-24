@@ -1,6 +1,7 @@
 package domain.specific.lang.parser
 
 import domain.specific.lang.model.*
+import kotlin.jvm.Throws
 import kotlin.math.min
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.full.declaredMemberProperties
@@ -532,6 +533,7 @@ class Parser(
         }
     }
 
+    @Throws(ParserException::class)
     fun parse(): Application {
         when {
             input.size < 4 -> {

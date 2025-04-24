@@ -27,10 +27,11 @@ class UmlGenerator(val graph: ArchGraph) {
         outputStream.close()
     }
 
-    fun generateUml() {
+    fun generateUml(): String {
         val umlText = generatePlantUml(graph.getAllNodes(), graph.getAllConnections())
-        val outputFilePath = "architecture.png"
-        generateDiagram(umlText, outputFilePath)
+        return umlText
+//        val outputFilePath = "architecture.png"
+//        generateDiagram(umlText, outputFilePath)
     }
 
 }

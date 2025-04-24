@@ -1,6 +1,7 @@
 package domain.specific.lang.lexer
 
 import domain.specific.lang.model.*
+import kotlin.jvm.Throws
 
 class Lexer(
     private val input: String
@@ -54,6 +55,7 @@ class Lexer(
         return input.substring(start, position)
     }
 
+    @Throws(LexerException::class)
     fun nextToken(): Pair<Int, Token> {
         val tokenBegin: Int
         while (position < input.length) {
@@ -123,7 +125,7 @@ class Lexer(
                     }
                 }
 
-                else -> throw LexerException("Unexpected character", position)
+                else -> throw LexerException("Unexpected character '${input[position]}'", position)
             }
         }
         return Pair(input.lastIndex, EOF)

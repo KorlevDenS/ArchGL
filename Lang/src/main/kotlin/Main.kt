@@ -186,15 +186,6 @@ fun main() {
                 frequency: 1100
             }
             
-            fr PublishNewPost {
-                actions: (
-                    accept Post from User,
-                    process it obtaining Notification,
-                    send it to User 
-                )
-                frequency: 1100
-            }
-            
         }
     """
 
@@ -260,7 +251,7 @@ fun main() {
     val tokens: MutableList<Token> = mutableListOf()
     val tokenTextPositions: MutableList<Int> = mutableListOf()
 
-    val lexer = Lexer(input4)
+    val lexer = Lexer(input3)
     while (true) {
         val token = lexer.nextToken()
         if (token.second == EOF) {

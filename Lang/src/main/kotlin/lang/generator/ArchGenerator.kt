@@ -1,6 +1,7 @@
 package domain.specific.lang.generator
 
 import domain.specific.lang.model.*
+import kotlin.jvm.Throws
 
 class ArchGenerator(
     private val semanticTree: Application
@@ -74,6 +75,7 @@ class ArchGenerator(
         }
     }
 
+    @Throws(StructureException::class)
     fun generate(): ArchGraph {
 
         for (fr in semanticTree.frs) {
