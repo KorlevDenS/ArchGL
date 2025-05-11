@@ -16,11 +16,11 @@ class ArchGenerator(
                         val dataServiceNode = DataServiceNode(a.data0.id)
                         dataServiceNode.addUsage(fr, a)
                         graph.addConnection(nodeToContinue, dataServiceNode)
-                        val dataNode = DataNode(a.data0.id)
+                        val dataNode = DataNode(a.data0)
                         dataNode.addUsage(fr, a)
                         graph.addConnection(dataServiceNode, dataNode)
                         if (a is UsingDBRelated) {
-                            val relatedDataNode = DataNode(a.related.id)
+                            val relatedDataNode = DataNode(a.related)
                             relatedDataNode.addUsage(fr, a)
                             graph.addConnection(dataServiceNode, relatedDataNode)
                         }
@@ -29,7 +29,7 @@ class ArchGenerator(
                         val messageServiceNode = MessageServiceNode(a.data0.id)
                         messageServiceNode.addUsage(fr, a)
                         graph.addConnection(nodeToContinue, messageServiceNode)
-                        val dataNode = DataNode(a.recipient.id)
+                        val dataNode = DataNode(semanticTree.findDataById(a.recipient.id))
                         dataNode.addUsage(fr, a)
                         graph.addConnection(messageServiceNode, dataNode)
                         val actorConsumerNode = ActorConsumerNode(a.recipient.id)
@@ -84,7 +84,7 @@ class ArchGenerator(
             if (fr.actions[0] is Accepting) {
                 val serverNode = ServerNode("Web")
                 serverNode.addUsage(fr, fr.actions[0])
-                val actorNode = ActorNode((fr.actions[0] as Accepting).sender.id)
+                val actorNode = ActorNode((fr.actions[0] as Accepting).sender)
                 actorNode.addUsage(fr, fr.actions[0])
                 graph.addConnection(actorNode, serverNode)
                 nodeToContinue = serverNode
@@ -123,7 +123,7 @@ class ArchGenerator(
                         val messageServiceNode = MessageServiceNode(action.data0.id)
                         messageServiceNode.addUsage(fr, action)
                         graph.addConnection(nodeToContinue, messageServiceNode)
-                        val dataNode = DataNode(action.recipient.id)
+                        val dataNode = DataNode(semanticTree.findDataById(action.recipient.id))
                         dataNode.addUsage(fr, action)
                         graph.addConnection(messageServiceNode, dataNode)
                         val actorConsumerNode = ActorConsumerNode(action.recipient.id)
@@ -135,12 +135,12 @@ class ArchGenerator(
                         val dataServiceNode = DataServiceNode(action.data0.id)
                         dataServiceNode.addUsage(fr, action)
                         graph.addConnection(nodeToContinue, dataServiceNode)
-                        val dataNode = DataNode(action.data0.id)
+                        val dataNode = DataNode(action.data0)
                         dataNode.addUsage(fr, action)
                         graph.addConnection(dataServiceNode, dataNode)
                         nodeToContinue = dataServiceNode
                         if (action is UsingDBRelated) {
-                            val relatedDataNode = DataNode(action.related.id)
+                            val relatedDataNode = DataNode(action.related)
                             relatedDataNode.addUsage(fr, action)
                             graph.addConnection(dataServiceNode, relatedDataNode)
                         }

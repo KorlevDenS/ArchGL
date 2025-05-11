@@ -4,12 +4,11 @@ data class Application (
 
     override var id: String = "",
 
-    var scaleVertically: String = "no",
-    var scaleHorizontally: String = "no",
     var usersNumber: Long = 0,
-    var dayUsersNumber: Long = 0,
+    var onlineUsersNumber: Long = 0,
     var latency: Double = 0.0,
     var availability: Double = 0.0,
+    var faultTolerance: String = "no",
 
     override var installedProps: MutableSet<String> = mutableSetOf(),
 
@@ -19,15 +18,23 @@ data class Application (
 
 ): LangStructure {
 
+    fun findDataById(id: String): Data {
+        for (d in data) {
+            if (d.id == id) {
+                return d
+            }
+        }
+        throw StringIndexOutOfBoundsException("Data $id not found")
+    }
+
     companion object {
 
         val estimatedProps: List<String> = listOf(
-            "scaleVertically",
-            "scaleHorizontally",
             "usersNumber",
-            "dayUsersNumber",
+            "onlineUsersNumber",
             "latency",
             "availability",
+            "faultTolerance"
         )
 
     }
@@ -35,12 +42,11 @@ data class Application (
     override fun toString(): String {
         val sb = StringBuilder()
         sb.append("Application: $id\n")
-        sb.append("scaleVertically: $scaleVertically\n")
-        sb.append("scaleHorizontally: $scaleHorizontally\n")
         sb.append("usersNumber: $usersNumber\n")
-        sb.append("dayUsersNumber: $dayUsersNumber\n")
+        sb.append("dayUsersNumber: $onlineUsersNumber\n")
         sb.append("latency: $latency\n")
-        sb.append("availability: $availability")
+        sb.append("availability: $availability\n")
+        sb.append("faultTolerance: $faultTolerance\n")
         sb.append("installedProps: $installedProps\n")
         sb.append("actors: $actors\n")
         sb.append("data: $data\n")

@@ -13,6 +13,9 @@ interface UsingDB
 interface UsingDBRelated: UsingDB {
     var related: Data
 }
+interface SendingTo {
+    var recipient: Actor
+}
 interface Obtaining {
     var resData: Data
 }
@@ -242,10 +245,10 @@ data class Process(
 
 data class SendToObtaining(
     override var data0: Data,
-    var recipient: Actor,
+    override var recipient: Actor,
     override var resData: Data,
     override var absorbers: MutableList<Action> = mutableListOf()
-) : Action(), Intermediate, Obtaining, PrecedeAbsorbing {
+) : Action(), Intermediate, Obtaining, PrecedeAbsorbing, SendingTo {
 
     override fun describe(): String {
         return "Send ${data0.id} to ${recipient.id} obtaining ${resData.id}"
@@ -280,7 +283,7 @@ data class SendToObtaining(
 }
 
 // Actually ends data stream - Absorbing
-data class SendTo(override var data0: Data, var recipient: Actor) : Action(), Absorbing {
+data class SendTo(override var data0: Data, override var recipient: Actor) : Action(), Absorbing, SendingTo {
     override fun describe(): String {
         return "Send ${data0.id} to ${recipient.id}"
     }

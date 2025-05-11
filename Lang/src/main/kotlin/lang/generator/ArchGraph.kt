@@ -39,6 +39,12 @@ class ArchGraph {
         }
     }
 
+    fun removeConnection(from: ArchNode, to: ArchNode) {
+        if (from in adjacencyList.keys && to in adjacencyList.keys && to in adjacencyList[from]!!) {
+            adjacencyList[from]!!.remove(from)
+        }
+    }
+
     fun getPredecessors(node: ArchNode): List<ArchNode> {
         val predecessors: MutableList<ArchNode> = mutableListOf()
         for (key in adjacencyList.keys) {

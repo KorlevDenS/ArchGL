@@ -1,5 +1,7 @@
 package domain.specific
 
+import domain.specific.lang.analyzer.UsageAnalyzer
+import domain.specific.lang.expander.Expander
 import domain.specific.lang.generator.ArchGenerator
 import domain.specific.lang.lexer.*
 import domain.specific.lang.model.Application
@@ -139,14 +141,17 @@ fun main() {
     val input3 = """
         app NewsFeedApp {
             usersNumber: 10000000
-            scaleVertically: "no"
-            scaleHorizontally: "yes"
             latency: 99.999
-            dayUsersNumber: 500000
+            onlineUsersNumber: 500000
             availability: 98.5
+            faultTolerance: "yes"
             
             actor User {
                 type: "web-client"
+            }
+            
+            actor Admin {
+                type: "service"
             }
             
             data Post {
@@ -165,6 +170,15 @@ fun main() {
                 type: "text"
                 retention: 0
                 unitVolume: 320
+            }
+            
+            fr DeletePost {
+                actions: (
+                    accept request from Admin,
+                    read User related Post,
+                    delete it
+                )
+                frequency: 130
             }
             
             fr PublishNewPost {
@@ -205,7 +219,7 @@ fun main() {
             data Post {
                 type: "text"
                 retention: 157680000000
-                unitVolume: 16000
+                unitVolume: 16033
             }
             
             data NewsFeed {
@@ -223,21 +237,9 @@ fun main() {
             fr PublishNewPost {
                 actions: (
                     accept Post from User,
-                    save it,
+                    save User related it,
                     process it,
-                    save it,
-                    process it,
-                    save it
-                )
-                frequency: 1100
-            }
-            
-            fr PublishNewPost {
-                actions: (
-                    accept Post from User,
-                    save it,
-                    process it,
-                    save it,
+                    save User related it,
                     process it,
                     save it
                 )
@@ -270,6 +272,13 @@ fun main() {
 
     val generator = ArchGenerator(semanticTree)
     val graph = generator.generate()
+
+    val usageAnalyzer = UsageAnalyzer(graph)
+    usageAnalyzer.analyze()
+
+    val expander = Expander(graph, semanticTree)
+    expander.expand()
+
     val umlGenerator = UmlGenerator(graph)
     umlGenerator.generateUml()
     println(graph)

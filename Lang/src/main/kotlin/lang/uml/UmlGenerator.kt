@@ -10,6 +10,7 @@ class UmlGenerator(val graph: ArchGraph) {
         val stringBuilder = StringBuilder()
         stringBuilder.append("@startuml\n")
         stringBuilder.append("!theme materia-outline\n")
+        stringBuilder.append("skinparam actorStyle awesome\n")
         nodes.forEach { node ->
             stringBuilder.append(node.plantUml())
         }
@@ -29,9 +30,9 @@ class UmlGenerator(val graph: ArchGraph) {
 
     fun generateUml(): String {
         val umlText = generatePlantUml(graph.getAllNodes(), graph.getAllConnections())
+        val outputFilePath = "architecture.png"
+        generateDiagram(umlText, outputFilePath)
         return umlText
-//        val outputFilePath = "architecture.png"
-//        generateDiagram(umlText, outputFilePath)
     }
 
 }
