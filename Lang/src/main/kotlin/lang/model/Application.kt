@@ -6,8 +6,8 @@ data class Application (
 
     var usersNumber: Long = 0,
     var onlineUsersNumber: Long = 0,
-    var latency: Double = 0.0,
-    var availability: Double = 0.0,
+    var latency: String = "not-important",
+    var availability: String = "not-important",
     var faultTolerance: String = "no",
 
     override var installedProps: MutableSet<String> = mutableSetOf(),

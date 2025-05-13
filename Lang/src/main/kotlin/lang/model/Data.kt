@@ -28,6 +28,7 @@ data class Data (
             "notification",
             "image",
             "text",
+            "structuredText",
             "number",
             "html",
             "file",

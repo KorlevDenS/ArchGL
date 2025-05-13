@@ -38,11 +38,11 @@ sealed class ArchNode(
 }
 
 
-class LoadBalancerNode(id: String): ArchNode("$id\nLoadBalancer") {
+class LoadBalancerNode(id: String): ArchNode(id + "LoadBalancer") {
 
     override fun plantUml(): String {
         val sb: StringBuilder = StringBuilder()
-        sb.append("Hexagon $id [\n")
+        sb.append("hexagon $id [\n")
         sb.append("$id\n")
         sb.append("]\n")
         return sb.toString()
@@ -62,7 +62,20 @@ class DNS(): ArchNode( "DNS") {
 
 }
 
-class ServerNode(id: String) : ArchNode(id + "Server") {
+class ServiceDiscovery(node: ArchNode): ArchNode(node.id + "Discovery") {
+
+    override fun plantUml(): String {
+        val sb: StringBuilder = StringBuilder()
+        sb.append("storage $id [\n")
+        sb.append("$id\n")
+        sb.append("]\n")
+        return sb.toString()
+    }
+
+}
+
+class ServerNode(id: String): ArchNode(id + "Server") {
+
     override fun plantUml(): String {
         val sb: StringBuilder = StringBuilder()
         sb.append("rectangle $id [\n")
@@ -76,6 +89,25 @@ class ServerNode(id: String) : ArchNode(id + "Server") {
         sb.append("]\n")
         return sb.toString()
     }
+
+}
+
+class BalancedSeverNode(serverNode: ServerNode): ArchNode(serverNode.id + "s", serverNode.usage) {
+
+    override fun plantUml(): String {
+        val sb: StringBuilder = StringBuilder()
+        sb.append("collections $id [\n")
+        sb.append("$id\n")
+        sb.append("\n")
+        for (key in usage.keys) {
+            for (action in usage[key]!!) {
+                sb.append("${key.id}: ${action.describe()}\n")
+            }
+        }
+        sb.append("]\n")
+        return sb.toString()
+    }
+
 }
 
 class ProcessingServiceNode(id: String): ArchNode(id +  "ProcessingService") {
@@ -189,15 +221,12 @@ class DataNode(val data: Data): ArchNode(data.id + "Data") {
 
     var volumeAfterStorageTime = 0.0
 
-    override fun plantUml(): String {
+    fun getPumlDataInfo(): String {
         val sb: StringBuilder = StringBuilder()
-        sb.append("database $id [\n")
-        sb.append("$id\n")
-        sb.append("\n")
-        sb.append("Day reading: ${readAmount}x ${data.type}, ${readBytes / (3 * 1024)} GB\n")
-        sb.append("Day creating: ${createdAmount}x ${data.type}, ${createdBytes / (3 * 1024)} GB\n")
-        sb.append("Day updating: ${updatedAmount}x ${data.type}, ${updatedBytes / (3 * 1024)} GB\n")
-        sb.append("Day deleting: ${deletedAmount}x ${data.type}, ${deletedBytes / (3 * 1024)} GB\n")
+        sb.append("Daily reading: ${readAmount}x ${data.type}, ${readBytes / (3 * 1024)} GB\n")
+        sb.append("Daily creating: ${createdAmount}x ${data.type}, ${createdBytes / (3 * 1024)} GB\n")
+        sb.append("Daily updating: ${updatedAmount}x ${data.type}, ${updatedBytes / (3 * 1024)} GB\n")
+        sb.append("Daily deleting: ${deletedAmount}x ${data.type}, ${deletedBytes / (3 * 1024)} GB\n")
         sb.append("Volume after ${data.retention / 86400000} days: ${volumeAfterStorageTime.toLong() / (3 * 1024)} GB\n")
         sb.append("\n")
         for (key in usage.keys) {
@@ -206,6 +235,76 @@ class DataNode(val data: Data): ArchNode(data.id + "Data") {
                 sb.append("${action.describe()}\n")
             }
         }
+        return sb.toString()
+    }
+
+    override fun plantUml(): String {
+        val sb: StringBuilder = StringBuilder()
+        sb.append("database $id [\n")
+        sb.append("$id\n")
+        sb.append("\n")
+        sb.append(getPumlDataInfo())
+        sb.append("]\n")
+        return sb.toString()
+    }
+
+}
+
+interface SpecifiesData {
+    val dataNode: DataNode
+}
+
+class SQLDatabaseNode(override val dataNode: DataNode): ArchNode(dataNode.data.id + "SQLDatabase"), SpecifiesData {
+
+    override fun plantUml(): String {
+        val sb: StringBuilder = StringBuilder()
+        sb.append("database $id #line:aqua;text:aqua [\n")
+        sb.append("$id\n")
+        sb.append("\n")
+        sb.append(dataNode.getPumlDataInfo())
+        sb.append("]\n")
+        return sb.toString()
+    }
+
+}
+
+class ObjectStorageNode(override val dataNode: DataNode): ArchNode(dataNode.data.id + "ObjectStorage"), SpecifiesData {
+
+    override fun plantUml(): String {
+        val sb: StringBuilder = StringBuilder()
+        sb.append("database $id #line:green;text:green [\n")
+        sb.append("$id\n")
+        sb.append("\n")
+        sb.append(dataNode.getPumlDataInfo())
+        sb.append("]\n")
+        return sb.toString()
+    }
+
+}
+
+class CacheNode(override val dataNode: DataNode): ArchNode(dataNode.data.id + "Cache"), SpecifiesData {
+
+    override fun plantUml(): String {
+        val sb: StringBuilder = StringBuilder()
+        sb.append("frame $id [\n")
+        sb.append("$id\n")
+        sb.append("\n")
+        sb.append(dataNode.getPumlDataInfo())
+        sb.append("]\n")
+        return sb.toString()
+    }
+
+}
+
+class DBCacheNode(val dataStore: SpecifiesData): ArchNode(dataStore.dataNode.data.id + "Cache") {
+
+    override fun plantUml(): String {
+        val sb: StringBuilder = StringBuilder()
+        sb.append("frame $id [\n")
+        sb.append("$id\n")
+        sb.append("\n")
+        sb.append("Daily reading up to\n${dataStore.dataNode.readAmount}x ${dataStore.dataNode.data.type}, " +
+                "${dataStore.dataNode.readBytes / (3 * 1024)} GB\n")
         sb.append("]\n")
         return sb.toString()
     }
@@ -218,6 +317,7 @@ class ActorNode(val actor: Actor): ArchNode(actor.id + "Actor") {
         val sb: StringBuilder = StringBuilder()
         sb.append("actor $id [\n")
         sb.append("$id\n")
+        sb.append("${actor.type}\n")
         sb.append("]\n")
         return sb.toString()
     }

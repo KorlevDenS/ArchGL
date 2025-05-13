@@ -11,6 +11,7 @@ class UmlGenerator(val graph: ArchGraph) {
         stringBuilder.append("@startuml\n")
         stringBuilder.append("!theme materia-outline\n")
         stringBuilder.append("skinparam actorStyle awesome\n")
+        //stringBuilder.append("allowmixing\n")
         nodes.forEach { node ->
             stringBuilder.append(node.plantUml())
         }

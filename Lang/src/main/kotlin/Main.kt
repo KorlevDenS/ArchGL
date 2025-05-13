@@ -141,9 +141,9 @@ fun main() {
     val input3 = """
         app NewsFeedApp {
             usersNumber: 10000000
-            latency: 99.999
+            latency: "middle"
             onlineUsersNumber: 500000
-            availability: 98.5
+            availability: "not-important"
             faultTolerance: "yes"
             
             actor User {
@@ -205,12 +205,12 @@ fun main() {
 
     val input4 = """
         app NewsFeedApp {
+            
             usersNumber: 10000000
-            scaleVertically: "no"
-            scaleHorizontally: "yes"
-            latency: 99.999
-            dayUsersNumber: 500000
-            availability: 98.5
+            latency: "middle"
+            onlineUsersNumber: 5000
+            availability: "not-important"
+            faultTolerance: "yes"
             
             actor User {
                 type: "web-client"
@@ -250,10 +250,93 @@ fun main() {
         }
     """
 
+    val input5 = """
+        app NewsFeedApp {
+            
+            usersNumber: 10000000
+            latency: "middle"
+            onlineUsersNumber: 5000
+            availability: "not-important"
+            faultTolerance: "yes"
+            
+            actor User {
+                type: "web-client"
+            }
+            
+            data Message {
+                type: "structuredText"
+                retention: 157680000000
+                unitVolume: 16033
+            }
+            
+            data Notification {
+                type: "notification"
+                retention: 0
+                unitVolume: 8000
+            }
+            
+            data Photo {
+                type: "image"
+                retention: 157680000000
+                unitVolume: 40000000
+            }
+            
+            data Music {
+                type: "audioStream"
+                retention: 157680000000
+                unitVolume: 60000000
+            }
+            
+            fr SendMessage {
+                actions: (
+                    accept Message from User,
+                    save User related it,
+                    send it to User 
+                )
+                frequency: 500
+            }
+            
+            fr SendMessage {
+                actions: (
+                    accept Message from User,
+                    process it obtaining Notification,
+                    send it to User
+                )
+                frequency: 500
+            }
+            
+            fr SendPhoto {
+                actions: (
+                    accept Photo from User,
+                    save User related it,
+                    send it to User
+                )
+                frequency: 300
+            }
+            
+            fr WatchProfilePhoto {
+                actions: (
+                    accept request from User,
+                    read User related Photo
+                )
+                frequency: 30
+            }
+            
+            fr ListenToMusic {
+                actions: (
+                    accept request from User,
+                    read Music
+                )
+                frequency: 30
+            }
+            
+        }
+    """
+
     val tokens: MutableList<Token> = mutableListOf()
     val tokenTextPositions: MutableList<Int> = mutableListOf()
 
-    val lexer = Lexer(input3)
+    val lexer = Lexer(input5)
     while (true) {
         val token = lexer.nextToken()
         if (token.second == EOF) {

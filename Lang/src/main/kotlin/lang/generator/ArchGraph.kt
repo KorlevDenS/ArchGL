@@ -31,6 +31,14 @@ class ArchGraph {
         }
     }
 
+    fun simpleAddConnection(from: ArchNode, to: ArchNode) {
+        val fromNode = addNodeIfNotFound(from)
+        val toNode = addNodeIfNotFound(to)
+        if (toNode !in adjacencyList[fromNode]!!) {
+            adjacencyList[fromNode]?.add(toNode)
+        }
+    }
+
     fun addConnection(from: ArchNode, to: ArchNode) {
         val fromNode = addNodeIfNotFound(from)
         val toNode = addAndFillNodeIfNotFound(to)
@@ -41,7 +49,31 @@ class ArchGraph {
 
     fun removeConnection(from: ArchNode, to: ArchNode) {
         if (from in adjacencyList.keys && to in adjacencyList.keys && to in adjacencyList[from]!!) {
-            adjacencyList[from]!!.remove(from)
+            adjacencyList[from]!!.remove(to)
+        }
+    }
+
+    fun removeNode(node: ArchNode) {
+        if (node in adjacencyList.keys) {
+            val predecessors = this.getPredecessors(node)
+            for (predecessor in predecessors) {
+                this.removeConnection(predecessor, node)
+            }
+            adjacencyList.remove(node)
+        }
+    }
+
+    fun replaceNode(old: ArchNode, new: ArchNode) {
+        if (old in adjacencyList.keys) {
+            val predecessors = this.getPredecessors(old)
+            for (predecessor in predecessors) {
+                this.simpleAddConnection(predecessor, new)
+            }
+            val followers = this.getFollowers(old)
+            for (follower in followers) {
+                this.simpleAddConnection(new, follower)
+            }
+            this.removeNode(old)
         }
     }
 
