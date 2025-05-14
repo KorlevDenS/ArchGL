@@ -174,6 +174,19 @@ class DataServiceNode(id: String): ArchNode(id +  "DataService") {
     }
 }
 
+class MessageQueue(): ArchNode("Queue") {
+
+    override fun plantUml(): String {
+        val sb: StringBuilder = StringBuilder()
+        sb.append("queue $id #line:gray [\n")
+        sb.append("$id\n")
+        sb.append("\n")
+        sb.append("]\n")
+        return sb.toString()
+    }
+
+}
+
 class MessageServiceNode(id: String): ArchNode(id +  "MessageService") {
     override fun plantUml(): String {
         val sb: StringBuilder = StringBuilder()
@@ -188,6 +201,22 @@ class MessageServiceNode(id: String): ArchNode(id +  "MessageService") {
         sb.append("]\n")
         return sb.toString()
     }
+}
+
+class ExternalService(val data: Data): ArchNode( data.id +  "ExternalService") {
+
+    override fun plantUml(): String {
+        val sb: StringBuilder = StringBuilder()
+        sb.append("storage $id [\n")
+        sb.append("$id\n")
+        sb.append("\n")
+        sb.append("Some ${data.type}\n")
+        sb.append("external service\n")
+        sb.append("\n")
+        sb.append("]\n")
+        return sb.toString()
+    }
+
 }
 
 class ServerCondition(val serverNode: ServerNode): ArchNode(serverNode.id +  "Condition") {
@@ -250,6 +279,18 @@ class DataNode(val data: Data): ArchNode(data.id + "Data") {
 
 }
 
+class Replication(val node: ArchNode): ArchNode(node.id + "Replicas") {
+
+    override fun plantUml(): String {
+        val sb: StringBuilder = StringBuilder()
+        sb.append("rectangle $id #line.dashed {\n")
+        sb.append(node.plantUml())
+        sb.append("}\n")
+        return sb.toString()
+    }
+
+}
+
 interface SpecifiesData {
     val dataNode: DataNode
 }
@@ -305,6 +346,36 @@ class DBCacheNode(val dataStore: SpecifiesData): ArchNode(dataStore.dataNode.dat
         sb.append("\n")
         sb.append("Daily reading up to\n${dataStore.dataNode.readAmount}x ${dataStore.dataNode.data.type}, " +
                 "${dataStore.dataNode.readBytes / (3 * 1024)} GB\n")
+        sb.append("]\n")
+        return sb.toString()
+    }
+
+}
+
+class CDN(override val dataNode: DataNode): ArchNode(dataNode.data.id + "CDN"), SpecifiesData {
+
+    override fun plantUml(): String {
+        val sb: StringBuilder = StringBuilder()
+        sb.append("cloud $id [\n")
+        sb.append("$id\n")
+        sb.append("Priority way of reading ${dataNode.data.id}!\n")
+        sb.append("\n")
+        sb.append("Daily reading up to\n${dataNode.readAmount}x ${dataNode.data.type}, " +
+                "${dataNode.readBytes / (3 * 1024)} GB\n")
+        sb.append("]\n")
+        return sb.toString()
+    }
+
+}
+
+class StaticDataCDN(val actorNode: ActorNode): ArchNode(actorNode.id + "CDN") {
+
+    override fun plantUml(): String {
+        val sb: StringBuilder = StringBuilder()
+        sb.append("cloud $id [\n")
+        sb.append("$id\n")
+        sb.append("\n")
+        sb.append("Static data for ${actorNode.id}\n")
         sb.append("]\n")
         return sb.toString()
     }

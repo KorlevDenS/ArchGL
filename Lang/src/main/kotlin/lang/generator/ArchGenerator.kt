@@ -16,9 +16,9 @@ class ArchGenerator(
                         val dataServiceNode = DataServiceNode(a.data0.id)
                         dataServiceNode.addUsage(fr, a)
                         graph.addConnection(nodeToContinue, dataServiceNode)
-                        val DataNode = DataNode(a.data0)
-                        DataNode.addUsage(fr, a)
-                        graph.addConnection(dataServiceNode, DataNode)
+                        val dataNode = DataNode(a.data0)
+                        dataNode.addUsage(fr, a)
+                        graph.addConnection(dataServiceNode, dataNode)
                         if (a is UsingDBRelated) {
                             val relatedDataNode = DataNode(a.related)
                             relatedDataNode.addUsage(fr, a)
@@ -29,12 +29,18 @@ class ArchGenerator(
                         val messageServiceNode = MessageServiceNode(a.data0.id)
                         messageServiceNode.addUsage(fr, a)
                         graph.addConnection(nodeToContinue, messageServiceNode)
-                        val DataNode = DataNode(semanticTree.findDataById(a.recipient.id))
-                        DataNode.addUsage(fr, a)
-                        graph.addConnection(messageServiceNode, DataNode)
+                        val dataNode = DataNode(semanticTree.findDataById(a.recipient.id))
+                        dataNode.addUsage(fr, a)
+                        graph.addConnection(messageServiceNode, dataNode)
                         val actorConsumerNode = ActorConsumerNode(a.recipient.id)
                         actorConsumerNode.addUsage(fr, a)
-                        graph.addConnection(messageServiceNode, actorConsumerNode)
+                        if (a.data0.type == "notification") {
+                            val externalService = ExternalService(a.data0)
+                            graph.addConnection(messageServiceNode, externalService)
+                            graph.addConnection(externalService, actorConsumerNode)
+                        } else {
+                            graph.addConnection(messageServiceNode, actorConsumerNode)
+                        }
                     }
                     else -> {}
                 }
@@ -139,21 +145,27 @@ class ArchGenerator(
                         val messageServiceNode = MessageServiceNode(action.data0.id)
                         messageServiceNode.addUsage(fr, action)
                         graph.addConnection(nodeToContinue, messageServiceNode)
-                        val DataNode = DataNode(semanticTree.findDataById(action.recipient.id))
-                        DataNode.addUsage(fr, action)
-                        graph.addConnection(messageServiceNode, DataNode)
+                        val dataNode = DataNode(semanticTree.findDataById(action.recipient.id))
+                        dataNode.addUsage(fr, action)
+                        graph.addConnection(messageServiceNode, dataNode)
                         val actorConsumerNode = ActorConsumerNode(action.recipient.id)
                         actorConsumerNode.addUsage(fr, action)
-                        graph.addConnection(messageServiceNode, actorConsumerNode)
+                        if (action.data0.type == "notification") {
+                            val externalService = ExternalService(action.data0)
+                            graph.addConnection(messageServiceNode, externalService)
+                            graph.addConnection(externalService, actorConsumerNode)
+                        } else {
+                            graph.addConnection(messageServiceNode, actorConsumerNode)
+                        }
                         nodeToContinue = messageServiceNode
                     }
                     is Read, is ReadRelated -> {
                         val dataServiceNode = DataServiceNode(action.data0.id)
                         dataServiceNode.addUsage(fr, action)
                         graph.addConnection(nodeToContinue, dataServiceNode)
-                        val DataNode = DataNode(action.data0)
-                        DataNode.addUsage(fr, action)
-                        graph.addConnection(dataServiceNode, DataNode)
+                        val dataNode = DataNode(action.data0)
+                        dataNode.addUsage(fr, action)
+                        graph.addConnection(dataServiceNode, dataNode)
                         nodeToContinue = dataServiceNode
                         if (action is UsingDBRelated) {
                             val relatedDataNode = DataNode(action.related)

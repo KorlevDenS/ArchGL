@@ -13,77 +13,34 @@ import domain.specific.lang.uml.UmlGenerator
 
 fun main() {
 
-    val input = """
-        app MyTestService {
-        
-          
-              
-            data SomeDataName {
-                
-            }
-            
-            actor SomeUserName {
-                
-            }
-    
-            fr SomeFR_name {
-                actions: (
-                    accept SomeUserName from SomeUserName,
-                    save it
-                )
-                frequency: 1100
-            }
-        }
-    """
-
     val input1 = """
-        app MyTestService {
-            usersNumber: 10000000
-            scaleVertically: "yes"
-            latency: 99.999
+        app NewsFeedApp {
             
-            actor PCClient {
+            usersNumber: 10000000
+            latency: "low"
+            onlineUsersNumber: 5000
+            availability: "high"
+            faultTolerance: "yes"
+            
+            actor User {
                 type: "web-client"
             }
-            actor Server1 {
-                type: "service"
-            }
-            data SMS {
-                type: "text"
-                retention: 12
-                unitVolume: 240
-            }
-            data Image {
-                type: "image"
-                retention: 1500
-                unitVolume: 432000
-            }
-            data MyWebPage {
-                type: "html"
-                retention: 1500
-                unitVolume: 432000
+            
+            data Message {
+                type: "structuredText"
+                retention: 157680000000
+                unitVolume: 16033
             }
             
-            fr SomeFR_name {
+            fr SendMessage {
                 actions: (
-                    accept request from PCClient,
-                    read SMS,
-                    work with it obtaining Image,
-                    send it to Server1 obtaining MyWebPage, 
-                    work with it,
-                    save it,
-                    return
+                    accept Message from User,
+                    send it to User,
+                    generate Message
                 )
-                frequency: 1100
+                frequency: 500
             }
             
-            fr SecondFR_name {
-                actions: (
-                    accept request from PCClient,
-                    return
-                )
-                frequency: 2100
-            }
         }
     """
 
@@ -141,9 +98,9 @@ fun main() {
     val input3 = """
         app NewsFeedApp {
             usersNumber: 10000000
-            latency: "middle"
-            onlineUsersNumber: 500000
-            availability: "not-important"
+            latency: "low"
+            onlineUsersNumber: 5000
+            availability: "high"
             faultTolerance: "yes"
             
             actor User {
@@ -207,9 +164,9 @@ fun main() {
         app NewsFeedApp {
             
             usersNumber: 10000000
-            latency: "middle"
+            latency: "low"
             onlineUsersNumber: 5000
-            availability: "not-important"
+            availability: "high"
             faultTolerance: "yes"
             
             actor User {
@@ -254,9 +211,9 @@ fun main() {
         app NewsFeedApp {
             
             usersNumber: 10000000
-            latency: "middle"
+            latency: "low"
             onlineUsersNumber: 5000
-            availability: "not-important"
+            availability: "high"
             faultTolerance: "yes"
             
             actor User {
@@ -336,7 +293,7 @@ fun main() {
     val tokens: MutableList<Token> = mutableListOf()
     val tokenTextPositions: MutableList<Int> = mutableListOf()
 
-    val lexer = Lexer(input5)
+    val lexer = Lexer(input1)
     while (true) {
         val token = lexer.nextToken()
         if (token.second == EOF) {
