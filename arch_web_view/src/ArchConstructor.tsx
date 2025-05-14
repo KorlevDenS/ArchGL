@@ -1,4 +1,5 @@
 import {
+    Autocomplete,
     Box,
     Button,
     Checkbox, Chip,
@@ -15,6 +16,18 @@ import MuiDrawer from '@mui/material/Drawer';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import PlantUMLDiagram from "./PlantUMLDiagram";
 import {useState} from "react";
+import {
+    AcceptFrom,
+    AcceptRequestFrom,
+    Action,
+    Actor,
+    AppMust,
+    Data,
+    Generate,
+    Process, ProcessObtaining,
+    Read,
+    ReadRelated, SendTo, SendToObtaining, Save, Update, Delete, SaveRelated, UpdateRelated, DeleteRelated, FR
+} from "./Model";
 
 class ArchGLProgram {
     program: string
@@ -40,39 +53,6 @@ class InfoResponse {
         this.code = code;
         this.message = message;
     }
-}
-
-class Actor {
-    name: string;
-    type: string;
-
-    constructor(name: string, type: string) {
-        this.name = name;
-        this.type = type;
-    }
-
-    toString(): string {
-        return this.name +  " тип=" + this.type
-    }
-}
-
-class Data {
-    name: string;
-    type: string;
-    retention: number;
-    unitVolume: number;
-
-    constructor(name: string, type: string, retention: number, unitVolume: number) {
-        this.name = name;
-        this.type = type;
-        this.retention = retention;
-        this.unitVolume = unitVolume;
-    }
-
-    toString(): string {
-        return this.name +  " тип=" + this.type + " время хранения=" + this.retention + " объём экземпляра: " +  this.unitVolume
-    }
-
 }
 
 const drawerWidth = 500;
@@ -142,11 +122,10 @@ export default function ArchConstructor({open, handleDrawerChange}: ArchConstruc
 
     const program = "app NewsFeedApp {\n" +
         "            usersNumber: 10000000\n" +
-        "            scaleVertically: \"no\"\n" +
-        "            scaleHorizontally: \"yes\"\n" +
-        "            latency: 99.999\n" +
-        "            dayUsersNumber: 500000\n" +
-        "            availability: 98.5\n" +
+        "            latency: \"low\"\n" +
+        "            onlineUsersNumber: 5000\n" +
+        "            availability: \"high\"\n" +
+        "            faultTolerance: \"yes\"\n" +
         "            \n" +
         "            actor User {\n" +
         "                type: \"web-client\"\n" +
@@ -197,31 +176,41 @@ export default function ArchConstructor({open, handleDrawerChange}: ArchConstruc
     );
 
     const [usersNumber, setUsersNumber] = useState<number>(0);
-    const [scaleVertically, setScaleVertically] = useState<boolean>(false);
-    const [scaleHorizontally, setScaleHorizontally] = useState<boolean>(false);
-    const [latency, setLatency] = useState<number>(0);
-    const [dayUsersNumber, setDayUsersNumber] = useState<number>(0);
-    const [availability, setAvailability] = useState<number>(0);
+    const [onlineUsersNumber, setOnlineUsersNumber] = useState<number>(0);
+
+    const [faultTolerance, setFaultTolerance] = useState<boolean>(false);
+
+    const [latency, setLatency] = useState<string>("not-important");
+    const [availability, setAvailability] = useState<string>("not-important");
+
+
+    const validateName = (name: string): boolean=>  {
+        if (name === "") {
+            setInfo(new InfoResponse(undefined, "Название объекта не должно быть пустым"));
+            return false;
+        }
+        if (!/^[A-Z]/.test(name)) {
+            setInfo(new InfoResponse(undefined, "Название объекта должно начинаться с заглавной латинской буквы"));
+            return false;
+        }
+        if (!/^[A-Za-z0-9]+$/.test(name)) {
+            setInfo(new InfoResponse(undefined, "Название объекта может содержать только латинские буквы или цифры"));
+            return false;
+        }
+        if (chipActors.some(obj => obj.name === name) || chipData.some(obj => obj.name === name)) {
+            setInfo(new InfoResponse(undefined, "Название объекта должно быть уникальным"));
+            return false;
+        }
+        return true;
+    }
+
 
     const [chipActors, setChipActors] = useState<Actor[]>([]);
     const handleDeleteActor = (chipToDelete: Actor) => () => {
         setChipActors((chips) => chips.filter((chip) => chip.name !== chipToDelete.name));
     };
     const handleAddActor = () => {
-        if (userName === "") {
-            setInfo(new InfoResponse(undefined, "Название актора не должно быть пустым"));
-            return;
-        }
-        if (!/^[A-Z]/.test(userName)) {
-            setInfo(new InfoResponse(undefined, "Название актора должно начинаться с заглавной латинской буквы"));
-            return;
-        }
-        if (!/^[A-Za-z0-9]+$/.test(userName)) {
-            setInfo(new InfoResponse(undefined, "Название актора может содержать только латинские буквы или цифры"));
-            return;
-        }
-        if (chipActors.some(obj => obj.name === userName) || chipData.some(obj => obj.name === userName)) {
-            setInfo(new InfoResponse(undefined, "Название пользователя должно быть уникальным"));
+        if (!validateName(userName)) {
             return;
         }
         if (userType === "") {
@@ -235,18 +224,158 @@ export default function ArchConstructor({open, handleDrawerChange}: ArchConstruc
     }
 
     const [chipData, setChipData] = useState<Data[]>([]);
+    const handleDeleteData = (chipToDelete: Data) => () => {
+        setChipData((chips) => chips.filter((chip) => chip.name !== chipToDelete.name));
+    };
+    const handleAddData = () => {
+        if (!validateName(dataName)) {
+            return;
+        }
+        if (dataType === "") {
+            setInfo(new InfoResponse(undefined, "Тип данных не должен быть пустым"));
+            return;
+        }
+        setDataUnitVolume(Math.floor(dataUnitVolume));
+        if (dataUnitVolume < 1) {
+            setInfo(new InfoResponse(undefined, "Размер данных не должен быть меньше 1 байта"));
+            return;
+        }
+        setDataRetention(Math.floor(dataRetention));
+        if (dataRetention < 0) {
+            setInfo(new InfoResponse(undefined, "Время хранения данных не должно быть меньше 0 мс."));
+            return;
+        }
+        const newArr: Data[] = chipData.slice();
+        newArr.push(new Data(dataName, dataType, dataRetention, dataUnitVolume));
+        setChipData(newArr);
+        setInfo(new InfoResponse(undefined, "Введите требования к вашему приложению"));
+    }
+
+    const [chipFrs, setChipFrs] = useState<FR[]>([]);
+    const handleDeleteFr = (chipToDelete: FR) => () => {
+        setChipFrs((chips) => chips.filter((chip) => chip.name !== chipToDelete.name));
+    };
+    const [actionsToChoose, setActionsToChoose] = useState<Action[]>([new AppMust()]);
+    const [actions, setActions] = useState<Action[]>([]);
+
+    const makeDataPairs = (ds: string[], as: string[]): string[][] =>  {
+        const pairs: string[][] = [];
+        if (ds.length > 0 && as.length > 0) {
+            ds.forEach( d => {
+                as.forEach( a => {
+                    pairs.push([a, d]);
+                    pairs.push([d, a]);
+                });
+            });
+        }
+        if (ds.length > 1) {
+            ds.forEach( d => {
+                ds.forEach( d1 => {
+                    if (d !== d1) {
+                        pairs.push([d, d1]);
+                    }
+                })
+            });
+        }
+        if (as.length > 1) {
+            as.forEach( a => {
+                as.forEach( a1 => {
+                    if (a !== a1) {
+                        pairs.push([a, a1]);
+                    }
+                })
+            });
+        }
+        return pairs;
+    }
+
+    const handleActionsInput = (newVal: Action[]) => {
+        setActions(newVal);
+        if (newVal.length === 0) {
+            setActionsToChoose([new AppMust()])
+        } else {
+            const newChoice: Action[] = [];
+            const lastChoice = newVal[newVal.length - 1];
+            if (lastChoice instanceof AppMust) {
+                chipActors.forEach( a => {
+                    newChoice.push(new AcceptRequestFrom(a.name));
+                    chipData.forEach(d => {
+                       newChoice.push(new AcceptFrom(d.name, a.name));
+                    });
+                });
+            } else if (lastChoice instanceof AcceptRequestFrom) {
+                chipData.forEach( d => {
+                    newChoice.push(new Generate(d.name));
+                    newChoice.push(new Read(d.name));
+                });
+                chipActors.forEach( a => {
+                    newChoice.push(new Generate(a.name));
+                    newChoice.push(new Read(a.name));
+                });
+                makeDataPairs(chipData.map(d => d.name), chipActors.map(a => a.name)).forEach(pair => {
+                    newChoice.push(new ReadRelated(pair[0], pair[1]));
+                });
+            } else {
+                newChoice.push(new Process());
+                newChoice.push(new Save());
+                newChoice.push(new Update());
+                newChoice.push(new Delete());
+
+                chipData.forEach( d => {
+                    newChoice.push(new ProcessObtaining(d.name));
+                    newChoice.push(new SaveRelated(d.name));
+                    newChoice.push(new UpdateRelated(d.name));
+                    newChoice.push(new DeleteRelated(d.name));
+                });
+                chipActors.forEach( a => {
+                    newChoice.push(new ProcessObtaining(a.name));
+                    newChoice.push(new SendTo(a.name));
+                    chipData.forEach( d => {
+                        newChoice.push(new SendToObtaining(a.name, d.name));
+                    });
+                    newChoice.push(new SaveRelated(a.name));
+                    newChoice.push(new UpdateRelated(a.name));
+                    newChoice.push(new DeleteRelated(a.name));
+                });
+            }
+            setActionsToChoose(newChoice);
+        }
+    }
+
+    const handleAddFr = () => {
+        if (!validateName(frName)) {
+            return;
+        }
+        setFrFrequency(Math.floor(frFrequency));
+        if (frFrequency < 1) {
+            setInfo(new InfoResponse(undefined, "Количество запросов требования в день не может быть < 1"));
+            return;
+        }
+        if (actions.length < 2) {
+            setInfo(new InfoResponse(undefined, "Должно быть действие, принимающее запрос/данные"));
+            return;
+        }
+        const newArr: FR[] = chipFrs.slice();
+        newArr.push(new FR(frName, frFrequency, actions));
+        setChipFrs(newArr);
+        setActions([]);
+        setActionsToChoose([new AppMust()])
+        setInfo(new InfoResponse(undefined, "Введите требования к вашему приложению"));
+    }
 
     const [userName, setUserName] = useState<string>("");
-    const [userType, setUserType] = useState<string>("");
+    const [userType, setUserType] = useState<string>("web-client");
 
     const [dataName, setDataName] = useState<string>("");
-    const [dataType, setDataType] = useState<string>("");
-    const [dataRetention, setDataRetention] = useState<string>("");
-    const [dataUnitVolume, setDataUnitVolume] = useState<string>("");
+    const [dataType, setDataType] = useState<string>("structuredText");
+    const [dataRetention, setDataRetention] = useState<number>(0);
+    const [dataUnitVolume, setDataUnitVolume] = useState<number>(0);
+
+    const [frName, setFrName] = useState<string>("");
+    const [frFrequency, setFrFrequency] = useState<number>(0);
 
 
-
-    const getGeneratedUml = async () => {
+    const getGeneratedUml = async (dslCode: string) => {
         try {
             await fetch("http://localhost:8080/arch/gateway/generate", {
                 method: 'POST',
@@ -254,7 +383,7 @@ export default function ArchConstructor({open, handleDrawerChange}: ArchConstruc
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(new ArchGLProgram(program)),
+                body: JSON.stringify(new ArchGLProgram(dslCode)),
             }).then(response => {
                 if (response.ok) {
                     const responseData = response.json();
@@ -277,8 +406,34 @@ export default function ArchConstructor({open, handleDrawerChange}: ArchConstruc
     }
 
     const handleSubmit = () => {
+        //TOD
+
+        let actorsCode = "";
+        chipActors.forEach(a => {
+            actorsCode += a.expression();
+        });
+        let dataCode = "";
+        chipData.forEach(d => {dataCode += d.expression();});
+        let frsCode = "";
+        chipFrs.forEach(f => {frsCode += f.expression();});
+        const prog = "" +
+            "app My_App {\n" +
+            "   \n" +
+            "   usersNumber: " + usersNumber + "\n" +
+            "   latency: \"" + latency + "\"\n" +
+            "   onlineUsersNumber: " + onlineUsersNumber + "\n" +
+            "   availability: \"" + availability + "\"\n" +
+            "   faultTolerance: \"" + (faultTolerance ? "yes" : "no") + "\"\n" +
+            "   \n" +
+            actorsCode +
+            "   \n" +
+            dataCode +
+            "   \n" +
+            frsCode +
+            "}\n";
+        console.log(prog);
         setInfo(new InfoResponse(undefined, "Выполняется генерация"))
-        getGeneratedUml().then();
+        getGeneratedUml(prog).then();
     }
 
     return (
@@ -321,38 +476,48 @@ export default function ArchConstructor({open, handleDrawerChange}: ArchConstruc
                 <Divider/>
 
                 <Stack spacing={2} mr={3} ml={3}>
-
-                    <FormControlLabel
-                        labelPlacement="start"
-                        label="Вертикально масшибировать"
-                        control={
-                            <Checkbox checked={scaleVertically} onChange={() => {setScaleVertically(!scaleVertically)}} color="primary"/>
-                        }
-                    />
-                    <FormControlLabel
-                        labelPlacement="start"
-                        label="Горизонтально масшибировать"
-                        control={
-                            <Checkbox checked={scaleHorizontally} onChange={() => {setScaleHorizontally(!scaleHorizontally)}} color="primary"/>
-                        }
-                    />
                     <TextField variant="standard" color={"primary"}
-                               label="Общее количество пользователей" type={"number"}
+                               label="Общее предполпгаемое количество пользователей" type={"number"}
                                onChange={(e) => {setUsersNumber(Number(e.target.value))}}/>
                     <TextField variant="standard" color={"primary"}
-                               label="Латентность" type={"number"}
-                               helperText="99.0% <= x < 100%"
-                               onChange={(e) => {setLatency(Number(e.target.value))}}/>
-                    <TextField variant="standard" color={"primary"}
-                               label="Дневное количество пользователей" type={"number"}
-                               onChange={(e) => {setDayUsersNumber(Number(e.target.value))}}/>
-                    <TextField variant="standard" color={"primary"}
-                               label="Доступность" type={"number"}
-                               helperText="обычно 98.0% <= x < 100%"
-                               onChange={(e) => {setAvailability(Number(e.target.value))}}/>
-
+                               label="Максимаьное количество одновренменных пользователей" type={"number"}
+                               onChange={(e) => {setOnlineUsersNumber(Number(e.target.value))}}/>
+                    <FormControl variant="standard" sx={{minWidth: 200 }}>
+                        <InputLabel id="demo-simple-select-label">Латентность</InputLabel>
+                        <Select
+                            labelId="demo-simple-select-label"
+                            id="demo-simple-select"
+                            value={latency}
+                            label="Латеннтность"
+                            onChange={e => {setLatency(e.target.value)}}
+                        >
+                            <MenuItem value={"low"}>максимально снизить</MenuItem>
+                            <MenuItem value={"middle"}>нормальная</MenuItem>
+                            <MenuItem value={"not-important"}>не принципиально</MenuItem>
+                        </Select>
+                    </FormControl>
+                    <FormControl variant="standard" sx={{minWidth: 200 }}>
+                        <InputLabel id="demo-simple-select-label">Доступность</InputLabel>
+                        <Select
+                            labelId="demo-simple-select-label"
+                            id="demo-simple-select"
+                            value={availability}
+                            label="Доступность"
+                            onChange={e => {setAvailability(e.target.value)}}
+                        >
+                            <MenuItem value={"high"}>максимально повысить</MenuItem>
+                            <MenuItem value={"middle"}>нормальная</MenuItem>
+                            <MenuItem value={"not-important"}>не принципиально</MenuItem>
+                        </Select>
+                    </FormControl>
+                    <FormControlLabel
+                        labelPlacement="start"
+                        label="Важна высокая отказоустойчивость"
+                        control={
+                            <Checkbox checked={faultTolerance} onChange={() => {setFaultTolerance(!faultTolerance)}} color="primary"/>
+                        }
+                    />
                     <Divider/>
-
                     <Typography
                         variant="h6"
                         noWrap
@@ -369,7 +534,6 @@ export default function ArchConstructor({open, handleDrawerChange}: ArchConstruc
                     >
                         Добавьте акторов
                     </Typography>
-
                     <Box display="flex"
                          flexDirection="row"
                          alignItems="center"
@@ -386,14 +550,13 @@ export default function ArchConstructor({open, handleDrawerChange}: ArchConstruc
                                 label="Тип актора"
                                 onChange={e => {setUserType(e.target.value)}}
                             >
-                                <MenuItem value={"web-client"}>Веб-клиент</MenuItem>
-                                <MenuItem value={"service"}>Сервис</MenuItem>
-                                <MenuItem value={"scheduler"}>Планировщик задач</MenuItem>
+                                <MenuItem value={"web-client"}>веб-клиент</MenuItem>
+                                <MenuItem value={"service"}>сервис</MenuItem>
+                                <MenuItem value={"scheduler"}>планировщик задач</MenuItem>
                             </Select>
                         </FormControl>
                     </Box>
                     <Button variant="outlined" onClick={() => {handleAddActor()}}>Добавить актора</Button>
-
                     <Paper
                         sx={{
                             display: 'flex',
@@ -416,9 +579,180 @@ export default function ArchConstructor({open, handleDrawerChange}: ArchConstruc
                             );
                         })}
                     </Paper>
+                    <Divider/>
+                    <Typography
+                        variant="h6"
+                        noWrap
+                        component="a"
+                        sx={{
+                            mr: 2,
+                            display: {xs: 'none', md: 'flex'},
+                            fontFamily: 'monospace',
+                            fontWeight: 'normal',
+                            letterSpacing: '.2rem',
+                            color: 'inherit',
+                            textDecoration: 'none',
+                        }}
+                    >
+                        Добавьте данные
+                    </Typography>
 
+                    <Box display="flex"
+                         flexDirection="row"
+                         alignItems="center"
+                    >
+                        <TextField sx={{mr: 9 }} variant="standard" color={"primary"}
+                                   label="Название данных"
+                                   onChange={(e) => {setDataName(e.target.value)}}/>
+                        <FormControl variant="standard" sx={{minWidth: 200 }}>
+                            <InputLabel id="demo-simple-select-label">Тип данных</InputLabel>
+                            <Select
+                                labelId="demo-simple-select-label"
+                                id="demo-simple-select"
+                                value={dataType}
+                                label="Тип данных"
+                                onChange={e => {setDataType(e.target.value)}}
+                            >
+                                <MenuItem value={"structuredText"}>структурированный текст</MenuItem>
+                                <MenuItem value={"text"}>текст</MenuItem>
+                                <MenuItem value={"number"}>число</MenuItem>
+                                <MenuItem value={"html"}>html-страница</MenuItem>
+                                <MenuItem value={"notification"}>уведомление</MenuItem>
+                                <MenuItem value={"image"}>изображение</MenuItem>
+                                <MenuItem value={"file"}>файл</MenuItem>
+                                <MenuItem value={"video"}>видео файл</MenuItem>
+                                <MenuItem value={"videoStream"}>поток видео</MenuItem>
+                                <MenuItem value={"audio"}>аудио файл</MenuItem>
+                                <MenuItem value={"audioStream"}>поток аудио</MenuItem>
+                                <MenuItem value={"statusCode"}>код ответа</MenuItem>
+                            </Select>
+                        </FormControl>
+                    </Box>
+                    <Box display="flex"
+                         flexDirection="row"
+                         alignItems="center"
+                    >
+                        <TextField sx={{mr: 9 }} variant="standard" color={"primary"}
+                                   label="Экземпляр в байтах" type={"number"}
+                                   onChange={(e) => {setDataUnitVolume(Number(e.target.value))}}/>
 
+                        <TextField variant="standard" color={"primary"}
+                                   label="Время хранения в мс." type={"number"} sx={{minWidth: 205 }}
+                                   onChange={(e) => {setDataRetention(Number(e.target.value))}}/>
+                    </Box>
+                    <Button variant="outlined" onClick={() => {handleAddData()}}>Добавить данные</Button>
+                    <Paper
+                        sx={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            flexWrap: 'wrap',
+                            listStyle: 'none',
+                            p: 0.5,
+                            m: 0,
+                        }}
+                        component="ul"
+                    >
+                        {chipData.map((data) => {
+                            return (
+                                <ListItem sx={{width: "inherit", p: 0.5}} key={data.name}>
+                                    <Chip
+                                        sx={{
+                                            height: 'auto',
+                                            '& .MuiChip-label': {
+                                                display: 'block',
+                                                whiteSpace: 'normal',
+                                            },
+                                        }}
+                                        label={data.toString()}
+                                        onDelete={handleDeleteData(data)}
+                                    />
+                                </ListItem>
+                            );
+                        })}
+                    </Paper>
+                    <Divider/>
+                    <Typography
+                        variant="h6"
+                        noWrap
+                        component="a"
+                        sx={{
+                            mr: 2,
+                            display: {xs: 'none', md: 'flex'},
+                            fontFamily: 'monospace',
+                            fontWeight: 'normal',
+                            letterSpacing: '.2rem',
+                            color: 'inherit',
+                            textDecoration: 'none',
+                        }}
+                    >
+                         Функциональные требования
+                    </Typography>
+                    <Box display="flex"
+                         flexDirection="row"
+                         alignItems="center"
+                    >
+                        <TextField sx={{mr: 9 }} variant="standard" color={"primary"}
+                                   label="Название требования"
+                                   onChange={(e) => {setFrName(e.target.value)}}/>
+                        <TextField variant="standard" color={"primary"}
+                                   label="Запросов в день" type={"number"} sx={{minWidth: 205 }}
+                                   onChange={(e) => {setFrFrequency(Number(e.target.value))}}/>
+                    </Box>
+                    <Autocomplete
+                        multiple
+                        id="tags-standard"
+                        value={actions}
+                        onChange={(_event, newValue) => {
+                            handleActionsInput(newValue)
+                        }}
+                        options={actionsToChoose}
+                        getOptionLabel={(option) => option.description()}
+                        renderValue={(values, getItemProps) =>
+                            values.map((option, index) => {
+                                const { key} = getItemProps({ index });
+                                return (<Chip key={key} label={option.description()}/>);
+                            })
+                        }
+                        renderInput={(params) => (
+                            <TextField
+                                {...params}
+                                variant="standard"
+                                label="Действия"
+                            />
+                        )}
+                    />
+                    <Button variant="outlined" onClick={() => {handleAddFr()}}>Добавить требование</Button>
+                    <Paper
+                        sx={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            flexWrap: 'wrap',
+                            listStyle: 'none',
+                            p: 0.5,
+                            m: 0,
+                        }}
+                        component="ul"
+                    >
+                        {chipFrs.map((fr) => {
+                            return (
+                                <ListItem sx={{width: "inherit", p: 0.5}} key={fr.key}>
+                                    <Chip
+                                        sx={{
+                                            height: 'auto',
+                                            '& .MuiChip-label': {
+                                                display: 'block',
+                                                whiteSpace: 'normal',
+                                            },
+                                        }}
+                                        label={fr.toString()}
+                                        onDelete={handleDeleteFr(fr)}
+                                    />
+                                </ListItem>
+                            );
+                        })}
+                    </Paper>
                     <Button variant="contained" onClick={() => {handleSubmit()}}>Сгенерировать</Button>
+                    <Divider/>
                 </Stack>
             </MuiDrawer>
             <Main open={open} >

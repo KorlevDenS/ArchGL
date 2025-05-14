@@ -1,5 +1,7 @@
 package domain.specific.archgateway.service
 
+import domain.specific.lang.analyzer.UsageAnalyzer
+import domain.specific.lang.expander.Expander
 import domain.specific.lang.generator.ArchGenerator
 import domain.specific.lang.lexer.Lexer
 import domain.specific.lang.model.Application
@@ -40,14 +42,20 @@ class ArchGenService {
             }
             throw e
         }
-//        println(semanticTree)
 
         val generator = ArchGenerator(semanticTree)
         val graph = generator.generate()
+
+        val usageAnalyzer = UsageAnalyzer(graph)
+        usageAnalyzer.analyze()
+
+        val expander = Expander(graph, semanticTree)
+        expander.expand()
+
         val umlGenerator = UmlGenerator(graph)
-        println(umlGenerator.generateUml())
-        return umlGenerator.generateUml()
-//        println(graph)
+        val puml = umlGenerator.generateUml()
+        println(puml)
+        return puml
     }
 
 }

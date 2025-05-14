@@ -8,7 +8,7 @@ export default function PlantUMLDiagram({umlText}: PlantUMLDiagramProps){
 
     const plantumlEncoder = require('plantuml-encoder');
     const encoded = plantumlEncoder.encode(umlText);
-    const url = 'http://www.plantuml.com/plantuml/img/' + encoded;
+    const url = 'https://www.plantuml.com/plantuml/png/' + encoded;
 
     return (
         <div>
