@@ -68,9 +68,7 @@ class UsageAnalyzer(val graph: ArchGraph) {
                         }
                     }
                 }
-                val savedDuringPeriod = (node.data.retention / 86400000.0) * node.createdBytes
-                val deletedDuringPeriod = (node.data.retention / 86400000.0) * node.deletedAmount
-                node.volumeAfterStorageTime = savedDuringPeriod - deletedDuringPeriod
+                node.volumeAfterStorageTime = (node.data.retention * (node.createdBytes - node.deletedAmount)) / 86400000.0
             }
         }
     }

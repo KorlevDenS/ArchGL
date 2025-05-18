@@ -290,6 +290,79 @@ fun main() {
         }
     """
 
+    val input6 = """
+        app MyFirstApp {
+            
+            usersNumber: 10000000
+            latency: "low"
+            onlineUsersNumber: 5000
+            availability: "high"
+            faultTolerance: "yes"
+            
+            actor User {
+                type: "web-client"
+            }
+            
+            actor Admin {
+                type: "service"
+            }
+            
+            data Message {
+                type: "structuredText"
+                retention: 157680000000
+                unitVolume: 16033
+            }
+            
+            data Notification {
+                type: "notification"
+                retention: 0
+                unitVolume: 8000
+            }
+            
+            data Music {
+                type: "audioStream"
+                retention: 157680000000
+                unitVolume: 60000000
+            }
+            
+            fr SendMessage {
+                actions: (
+                    accept Message from User,
+                    save User related it,
+                    send it to User 
+                )
+                frequency: 500
+            }
+            
+            fr SendMessage {
+                actions: (
+                    accept Message from User,
+                    process it obtaining Notification,
+                    send it to User
+                )
+                frequency: 500
+            }
+            
+            fr ListenToMusic {
+                actions: (
+                    accept request from User,
+                    read Music
+                )
+                frequency: 3000
+            }
+            
+            fr DeleteMusic {
+                actions: (
+                    accept request from Admin,
+                    read Music,
+                    delete it
+                )
+                frequency: 3000
+            }
+            
+        }
+    """
+
     val tokens: MutableList<Token> = mutableListOf()
     val tokenTextPositions: MutableList<Int> = mutableListOf()
 

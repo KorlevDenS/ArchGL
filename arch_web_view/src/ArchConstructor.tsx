@@ -37,14 +37,6 @@ class ArchGLProgram {
     }
 }
 
-class TextUmlRequest {
-    uml: string
-
-    constructor(uml: string) {
-        this.uml = uml;
-    }
-}
-
 class InfoResponse {
     code: number | undefined;
     message: string;
@@ -117,58 +109,7 @@ interface ArchConstructorProps {
     handleDrawerChange(isOpen: boolean): void;
 }
 
-
 export default function ArchConstructor({open, handleDrawerChange}: ArchConstructorProps) {
-
-    const program = "app NewsFeedApp {\n" +
-        "            usersNumber: 10000000\n" +
-        "            latency: \"low\"\n" +
-        "            onlineUsersNumber: 5000\n" +
-        "            availability: \"high\"\n" +
-        "            faultTolerance: \"yes\"\n" +
-        "            \n" +
-        "            actor User {\n" +
-        "                type: \"web-client\"\n" +
-        "            }\n" +
-        "            \n" +
-        "            data Post {\n" +
-        "                type: \"text\"\n" +
-        "                retention: 157680000000\n" +
-        "                unitVolume: 16000\n" +
-        "            }\n" +
-        "            \n" +
-        "            data NewsFeed {\n" +
-        "                type: \"text\"\n" +
-        "                retention: 60000\n" +
-        "                unitVolume: 480000\n" +
-        "            }\n" +
-        "            \n" +
-        "            data Notification {\n" +
-        "                type: \"text\"\n" +
-        "                retention: 0\n" +
-        "                unitVolume: 320\n" +
-        "            }\n" +
-        "            \n" +
-        "            fr PublishNewPost {\n" +
-        "                actions: (\n" +
-        "                    accept Post from User,\n" +
-        "                    save it,\n" +
-        "                    process it obtaining NewsFeed,\n" +
-        "                    update User related it\n" +
-        "                )\n" +
-        "                frequency: 1100\n" +
-        "            }\n" +
-        "           \n" +
-        "            fr PublishNewPost {\n" +
-        "                actions: (\n" +
-        "                    accept Post from User,\n" +
-        "                    process it obtaining Notification,\n" +
-        "                    send it to User \n" +
-        "                )\n" +
-        "                frequency: 1100\n" +
-        "            }\n" +
-        "            \n" +
-        "        }";
 
     const [puml, setPuml] = useState<string>('A -> B: Hello');
     const [info, setInfo] = useState<InfoResponse | null>(new InfoResponse(
@@ -405,9 +346,37 @@ export default function ArchConstructor({open, handleDrawerChange}: ArchConstruc
         }
     }
 
-    const handleSubmit = () => {
-        //TOD
+    const validateApp = (): boolean => {
+        setUsersNumber(Math.floor(usersNumber));
+        if (usersNumber < 1) {
+            setInfo(new InfoResponse(undefined, "Количество пользователей не может быть < 1"));
+            return false;
+        }
+        setOnlineUsersNumber(Math.floor(onlineUsersNumber));
+        if (onlineUsersNumber < 1) {
+            setInfo(new InfoResponse(undefined, "Количество одновременных пользователей не может быть < 1"));
+            return false;
+        }
+        if (onlineUsersNumber > usersNumber) {
+            setInfo(new InfoResponse(undefined, "Количество одновременных пользователей не " +
+                "может быть больше общего их количества"));
+            return false;
+        }
+        if (chipActors.length === 0) {
+            setInfo(new InfoResponse(undefined, "Добавьте как минимум одного актора"));
+            return false;
+        }
+        if (chipFrs.length === 0) {
+            setInfo(new InfoResponse(undefined, "Добавьте как минимум одно функциональное требование"));
+            return false;
+        }
+        return true;
+    }
 
+    const handleSubmit = () => {
+        if (!validateApp()) {
+            return;
+        }
         let actorsCode = "";
         chipActors.forEach(a => {
             actorsCode += a.expression();

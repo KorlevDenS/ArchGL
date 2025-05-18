@@ -504,24 +504,6 @@ class Parser(
                     }
                     blackList.clear()
                 }
-
-//                val firstAccept = unitedFrs[0].actions[0]
-//                for (i in 1..<unitedFrs.size) {
-//                    if (firstAccept is PrecedeAbsorbing && unitedFrs[i].actions[0] is PrecedeAbsorbing) {
-//                        firstAccept.join(unitedFrs[i].actions[0] as PrecedeAbsorbing)
-//                        unitedFrs[i].actions[0] = Dummy()
-//                    }
-//                }
-
-//                for (i in 1..<unitedFrs.size) {
-//                    if (unitedFrs[i].actions.size == 1 && unitedFrs[i].actions[0] !is Accepting) {
-//                        unitedFrs[i].actions[0] = Dummy()
-//                    }
-//                    if (unitedFrs[i].actions.size > 1 && unitedFrs[i].actions[1] is Dummy) {
-//                        unitedFrs[i].actions[0] = Dummy()
-//                    }
-//                }
-//                unitedFrs.removeIf { it.actions.size == 1 && it.actions[0] is Accepting }
             }
             unitedFrs.forEach { it ->
                 it.actions.removeIf { it is Dummy }
