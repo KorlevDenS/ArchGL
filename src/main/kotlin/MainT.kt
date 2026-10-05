@@ -3,14 +3,37 @@ package domain.specific
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 fun main() {
-    val name = "Kotlin"
-    //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-    // to see how IntelliJ IDEA suggests fixing it.
-    println("Hello, " + name + "!")
 
-    for (i in 1..5) {
-        //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-        // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-        println("i = $i")
+    val testRequirements = listOf(
+        // 1. Простое
+        "Клиент оформляет заказ.",
+        // 2. Создание сущности
+        "Менеджер формирует отчет по продажам.",
+        // 3. Изменение состояния
+        "Оператор переводит заявку в статус подтверждена.",
+        // 4. Использование внешней системы
+        "Платежный сервис выполняет обработку платежа через банк.",
+        // 5. Событие
+        "После выполнения платежа система отправляет уведомление клиенту.",
+        // 6. Несколько действий
+        "Администратор создает пользователя и назначает ему роль.",
+        // 7. Композиция сущностей
+        "Заказ содержит товары и информацию о доставке.",
+        // 8. Более сложное требование
+        "После создания заявки менеджер выполняет проверку документов и переводит заявку в статус одобрена.",
+        "Пользователь должен иметь возможность оплатить заказ банковской картой",
+        "Товар должен добавляться в корзину после оплаты",
+        "После авторизации в системе пользователь может создавать музыку."
+    )
+
+    testRequirements.forEach {
+        println("$it:")
+        val rawResponse = parseEntity(it)
+        val prettyJsonEntitiesResponse = printEntities(rawResponse)
+
+        printRelations(parseRelation(it, prettyJsonEntitiesResponse), true)
+        //println("raw:")
+        //println(rawResponse)
     }
+
 }
